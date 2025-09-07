@@ -48,9 +48,7 @@ export(ACF, allCoef, asOneFormula, asTable, augPred, balancedGrouped,
        splitFormula, varComb, varConstPower, VarCorr, varExp,
        varConstProp,
        varFixed, varFunc, varIdent, Variogram, varPower,
-       varWeights,
-     f2L, f2R, pdInd                                               # added by GM
-     )
+       varWeights)
 
 # called directly via do.call
 export(anova.lme, nlsList.formula, plot.lme)
@@ -100,7 +98,6 @@ S3method(coef, pdIdent)
 S3method(coef, pdMat)
 S3method(coef, pdNatural)
 S3method(coef, pdSymm)
-S3method(coef, pdInd)                      # added GM
 S3method(coef, reStruct)
 S3method(coef, summary.lme, getCTable)
 S3method(coef, summary.gls, getCTable)
@@ -325,7 +322,6 @@ S3method(pdFactor, pdLogChol)
 S3method(pdFactor, pdMat)
 S3method(pdFactor, pdNatural)
 S3method(pdFactor, pdSymm)
-S3method(pdFactor, pdInd)                        # added GM
 S3method(pdFactor, reStruct)
 S3method(pdMatrix, pdBlocked)
 S3method(pdMatrix, pdCompSymm)
@@ -334,7 +330,6 @@ S3method(pdMatrix, pdIdent)
 S3method(pdMatrix, pdMat)
 S3method(pdMatrix, pdNatural)
 S3method(pdMatrix, pdSymm)
-S3method(pdMatrix, pdInd)                        # added GM
 S3method(pdMatrix, reStruct)
 S3method(plot, ACF)
 S3method(plot, augPred)
@@ -430,7 +425,6 @@ S3method(solve, pdLogChol)
 S3method(solve, pdMat)
 S3method(solve, pdNatural)
 S3method(solve, pdSymm)
-S3method(solve, pdInd)                                     # added GM
 S3method(solve, reStruct)
 S3method(summary, corAR1)
 S3method(summary, corARMA)

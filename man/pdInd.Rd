@@ -62,3 +62,41 @@ covariance between random slopes.
 and biased eIt is often desirable to fit a parsimonious model with more than one
 variable with a random slope.
 }
+\examples{
+fit <- lme(MathAch ~ SES + Sex + Minority, data = MathAchieve,
+             random = list(School = ~ 1 + SES + Sex + Minority))
+summary(fit)
+getVarCov(fit)
+cov <- diag(4)
+cov[rbind(c(1,2),c(1,3), c(1,4))] <- 1
+cov
+fit_ind <- update(
+     fit, 
+     random = list(School = pdInd(~ 1 + SES + Sex + Minority, cov = cov)))
+summary(fit_ind)
+round(zapsmall(getVarCov(fit_ind)),2)
+AIC(fit, fit_ind)
+anova(fit, fit_ind)
+# Not all patterns are feasible
+cov <- diag(4)
+cov[2,3] <- 1
+cov
+fit_ind2 <- update(
+     fit, 
+     random = list(School = pdInd(~ 1 + SES + Sex + Minority, cov = cov)))
+summary(fit_ind2)
+zapsmall(getVarCov(fit_ind2)) 
+zapsmall(getVarCov(fit_ind))
+ 
+cov <- diag(4)
+cov[row(cov) < col(cov)] <- 1
+cov2 <- cov
+fit2 <- lme(MathAch ~ SES + Sex + Minority, data = MathAchieve,
+             random = list(School = pdInd( ~ 1 + SES + Sex + Minority, cov = cov2)))
+zapsmall(getVarCov(fit2))
+cov3 <- diag(3)
+cov3
+fit3 <- lme(MathAch ~ SES + Sex + Minority, data = MathAchieve,
+             random = list(School = pdInd( ~ 1 + SES + Sex, cov = cov3)))
+zapsmall(getVarCov(fit3))
+}

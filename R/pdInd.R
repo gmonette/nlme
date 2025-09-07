@@ -1,3 +1,20 @@
+#' Display values for debugging
+#' 
+#' @param x value to display
+#' @param head heading
+#' 
+#' Displays value and its name if \code{getOption('verbose')} is TRUE.
+#' @export
+disp <- function(x, head = deparse(substitute(x)))
+{
+  if(isTRUE(options('verbose')[['verbose']])) {
+    cat("::: ", head, " :::\n")
+    print(x)
+    cat("======================\n")
+  }
+  invisible(x)
+}
+
 #' Construct pdInd object
 #' 
 #' This function is a constructor for the \code{pdInd} class used to
@@ -42,12 +59,51 @@
 #' estimated and, thus, possibly non-zero. The default is that the covariances
 #' in the first column are estimated and possibly non-zero.
 #' @examples
+#' fit <- lme(MathAch ~ SES + Sex + Minority, data = MathAchieve,
+#'              random = list(School = ~ 1 + SES + Sex + Minority))
+#' summary(fit)
+#' getVarCov(fit)
+#' cov <- diag(4)
+#' cov[rbind(c(1,2),c(1,3), c(1,4))] <- 1
+#' cov
+#' fit_ind <- update(
+#'      fit, 
+#'      random = list(School = pdInd(~ 1 + SES + Sex + Minority, cov = cov)))
+#' summary(fit_ind)
+#' round(zapsmall(getVarCov(fit_ind)),2)
+#' AIC(fit, fit_ind)
+#' anova(fit, fit_ind)
+#' # Not all patterns are feasible
+#' cov <- diag(4)
+#' cov[2,3] <- 1
+#' cov
+#' fit_ind2 <- update(
+#'      fit, 
+#'      random = list(School = pdInd(~ 1 + SES + Sex + Minority, cov = cov)))
+#' summary(fit_ind2)
+#' zapsmall(getVarCov(fit_ind2)) 
+#' zapsmall(getVarCov(fit_ind))
+#'  
+#' cov <- diag(4)
+#' cov[row(cov) < col(cov)] <- 1
+#' cov2 <- cov
+#' fit2 <- lme(MathAch ~ SES + Sex + Minority, data = MathAchieve,
+#'              random = list(School = pdInd( ~ 1 + SES + Sex + Minority, cov = cov2)))
+#' zapsmall(getVarCov(fit2))
+#' cov3 <- diag(3)
+#' cov3
+#' fit3 <- lme(MathAch ~ SES + Sex + Minority, data = MathAchieve,
+#'              random = list(School = pdInd( ~ 1 + SES + Sex, cov = cov3)))
+#' zapsmall(getVarCov(fit3))
 #' @export
 pdInd <-
   function (value = numeric(0), form = NULL, nam = NULL,
             data = sys.parent(), cov = NULL)
   {
     # unchanged
+    if(is.null(cov)) stop("cov must be a matrix indicating which terms should be non-zero in R in the Choleski G=RR' decomposition")
+    if(is.numeric(cov)) cov <- cov != 0
+    diag(cov) <- FALSE
     object <- numeric(0)
     class(object) <- c("pdInd", "pdMat")
     pdConstruct(object, value, form, nam, data, cov)
@@ -431,10 +487,14 @@ cov
 
 cov[2,3] <- TRUE
 cov
-fit6b <- lme(mathach ~ ses + Sex + Minority, hs,
+cov <- diag(4)
+cov[rbind(c(1,2),c(1,3), c(1,4))] <- 1
+
+cov
+fit6b <- lme(MathAch ~ SES + Sex + Minority, MathAchieve,
             random = 
               list( 
-                school = pdInd( ~ 1 + ses + Sex + Minority, cov = cov)),
+                School = pdInd( ~ 1 + SES + Sex + Minority, cov = cov)),
             control = list(msVerbose=T,returnObject=T,msMaxIter=1000))
 summary(fit6b)
 names(fit6b)
@@ -466,5 +526,8 @@ fit6b$modelStruct$reStruct$school
   
   unclass(ff2)
   unclass(ff3)
+  
+  
+  
   
 }
