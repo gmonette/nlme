@@ -1,5 +1,9 @@
 Package: nlme
+<<<<<<< HEAD
 Version: 0.0-99999
+=======
+Version: 0.1-0001
+>>>>>>> ff33804 (modified working? version)
 Date: 2025-03-31
 Title: Linear and Nonlinear Mixed Effects Models
 Authors@R: c(person("José", "Pinheiro", role = "aut", comment = "S version"),
