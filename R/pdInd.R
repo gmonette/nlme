@@ -75,11 +75,12 @@ disp <- function(x, head = deparse(substitute(x)))
 #' anova(fit, fit_ind)
 #' # Not all patterns are feasible
 #' cov <- diag(4)
-#' cov[2,3] <- 1
+#' cov[2,4] <- 1
 #' cov
 #' fit_ind2 <- update(
 #'      fit, 
-#'      random = list(School = pdInd(~ 1 + SES + Sex + Minority, cov = cov)))
+#'      random = list(School = pdInd(~ 1 + SES + Sex + Minority, cov = cov)),
+#'      control = list(returnObject = TRUE))
 #' summary(fit_ind2)
 #' zapsmall(getVarCov(fit_ind2)) 
 #' zapsmall(getVarCov(fit_ind))
@@ -95,12 +96,96 @@ disp <- function(x, head = deparse(substitute(x)))
 #' fit3 <- lme(MathAch ~ SES + Sex + Minority, data = MathAchieve,
 #'              random = list(School = pdInd( ~ 1 + SES + Sex, cov = cov3)))
 #' zapsmall(getVarCov(fit3))
+#' # 
+#' # Patterns with few zeros
+#' #
+#' cov <- diag(4)
+#' cov[row(cov) < col(cov)] <- 1
+#' cov
+#' cov[1,4] <- 1
+#' cov[2,4] <- 0
+#' cov[3,4] <- 0
+#' 
+#' cov
+#' cov4 <- cov
+#' fit4 <- lme(MathAch ~ SES + Sex + Minority, data = MathAchieve,
+#'              random = list(School = pdInd( ~ 1 + SES + Sex + Minority, cov = cov4)),
+#'              control = list(returnObject = TRUE))
+#' zapsmall(getVarCov(fit4))
+#' zapsmall(solve(getVarCov(fit4)))
+#' 
+#' # puts 0 in Ginv:
+#' # Not an issue -- consistent with row orthogonality of R
+#' 
+#' cov <- diag(4)
+#' cov[row(cov) < col(cov)] <- 1
+#' cov[1,2] <- 0
+#' cov
+#' cov5 <- cov
+#' fit5 <- lme(MathAch ~ SES + Sex + Minority, data = MathAchieve,
+#'              random = list(School = pdInd( ~ 1 + SES + Sex + Minority, cov = cov5)),
+#'              control = list(returnObject = TRUE))
+#' zapsmall(getVarCov(fit5))
+#' zapsmall(solve(getVarCov(fit5)))
+#' 
+#' # puts 0 in G:
+#' 
+#' cov <- diag(4)
+#' cov[row(cov) < col(cov)] <- 1
+#' cov[3,4] <- 0
+#' cov
+#' cov5 <- cov
+#' fit5 <- lme(MathAch ~ SES + Sex + Minority, data = MathAchieve,
+#'              random = list(School = pdInd( ~ 1 + SES + Sex + Minority, cov = cov5)),
+#'              control = list(returnObject = TRUE))
+#' zapsmall(getVarCov(fit5))
+#' zapsmall(solve(getVarCov(fit5)))
+#' 
+#' # puts 0 in G and Ginv (block diagonal)
+#' 
+#' cov <- diag(4)
+#' cov[row(cov) < col(cov)] <- 1
+#' cov[3,4] <- 0
+#' cov[2,4] <- 0
+#' cov[1,4] <- 0
+#' 
+#' cov
+#' cov5 <- cov
+#' fit5 <- lme(MathAch ~ SES + Sex + Minority, data = MathAchieve,
+#'              random = list(School = pdInd( ~ 1 + SES + Sex + Minority, cov = cov5)),
+#'              control = list(returnObject = TRUE))
+#' zapsmall(getVarCov(fit5))
+#' zapsmall(solve(getVarCov(fit5)))
+#'
+#' # puts 0 in Ginv, NOT G (block diagonal)
+#' 
+#' cov <- diag(4)
+#' cov[row(cov) < col(cov)] <- 1
+#' cov[1,2] <- 0
+#' cov[1,3] <- 0
+#' cov[1,4] <- 1
+#' 
+#' cov
+#' cov5 <- cov
+#' fit5 <- lme(MathAch ~ SES + Sex + Minority, data = MathAchieve,
+#'              random = list(School = pdInd( ~ 1 + SES + Sex + Minority, cov = cov5)),
+#'              control = list(returnObject = TRUE))
+#' zapsmall(getVarCov(fit5))
+#' zapsmall(solve(getVarCov(fit5)))
+#' 
+#' # Hypothesis:
+#' # We get the patterns for G by taking inner products of 
+#' # of ROWS of R and for Ginv by taking inner products of
+#' # COLUMNS of R.
+#' 
+
 #' @export
 pdInd <-
   function (value = numeric(0), form = NULL, nam = NULL,
             data = sys.parent(), cov = NULL)
   {
-    # unchanged
+    disp('In pdInd')
+    disp(cov)
     if(is.null(cov)) stop("cov must be a matrix indicating which terms should be non-zero in R in the Choleski G=RR' decomposition")
     if(is.numeric(cov)) cov <- cov != 0
     diag(cov) <- FALSE
@@ -136,6 +221,10 @@ pdConstruct.pdInd <-
             ...)
   {
     # note that pdConstruct.pdMat return an upper-triangular R factor, === might not be correct
+    disp('In pdConstruct.pdInd')
+    disp(object)
+    disp(value)
+    disp(cov)
     if(!is.null(attr(object,'cov'))) cov <- attr(object,'cov')
     if(!is.null(attr(value,'cov'))) cov <- attr(value,'cov')
     val <- nlme:::pdConstruct.pdMat(object, 
@@ -166,6 +255,8 @@ pdConstruct.pdInd <-
       attr(value,"cov") <- cov
       class(value) <- c("pdInd", "pdMat")
       attr(value,"invert") <- FALSE
+      disp('258')
+      disp(value)
       return(value)
     }
     stop("shouldn't get here in pdConstruct.pdInd")
