@@ -348,8 +348,14 @@ pdConstruct.pdInd <-
 #' @return the full right-triangular factor, including zeros in the lower
 #' triangle, is returned as a vector in column order
 #' @examples
+#' cov <- diag(4)
+#' cov[2,4] <- 1
+#' cov
 #' mat <- pdInd(diag(1:4), cov = diag(4))
 #' pdFactor(mat)
+#' coef(mat)
+#' pdMatrix(mat)
+#' solve(mat)
 #' @export
 pdFactor.pdInd <-
   function (object)

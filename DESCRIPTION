@@ -1,7 +1,7 @@
 Package: nlme
-Version: 0.1-0002
-Date: 2025-03-31
-Title: Linear and Nonlinear Mixed Effects Models
+Version: 0.1-0003
+Date: 2025-09-07
+Title: Linear and Nonlinear Mixed Effects Models (2025-03-31 version + pdInd)
 Authors@R: c(person("José", "Pinheiro", role = "aut", comment = "S version"),
              person("Douglas", "Bates", role = "aut", comment = "up to 2007"),
              person("Saikat", "DebRoy", role = "ctb", comment = "up to 2002"),

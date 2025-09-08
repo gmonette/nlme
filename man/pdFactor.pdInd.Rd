@@ -29,6 +29,12 @@ then the corresponding variance matrix with will have zero covariances
 except on the first row (and column).
 }
 \examples{
+cov <- diag(4)
+cov[2,4] <- 1
+cov
 mat <- pdInd(diag(1:4), cov = diag(4))
 pdFactor(mat)
+coef(mat)
+pdMatrix(mat)
+solve(mat)
 }
