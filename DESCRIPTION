@@ -12,7 +12,7 @@ Authors@R: c(person("José", "Pinheiro", role = "aut", comment = "S version"),
              person("Johannes", "Ranke", role = "ctb", comment = "varConstProp()"),
 	     person("R Core Team", email = "R-core@R-project.org",
                     role = c("aut", "cre"), comment = c(ROR = "02zz1nj61")),
-       person("Monette","Georges", role = 'ctb','comment = 'added pdInd',
+       person("Monette","Georges", role = 'ctb',comment = 'added pdInd',
                email = "georges@yorku.ca"))
 Contact: see 'MailingList'
 Description: Fit and compare Gaussian linear and nonlinear mixed-effects models (modified by GM with pdInd).
