@@ -11,40 +11,24 @@
 variance matrix it represents will be extracted}
 }
 \value{
-the full right-triangular factor, including zeros in the lower triangle, is returned as a vector in column order
-
 the full right-triangular factor, including zeros in the lower
 triangle, is returned as a vector in column order
 }
 \description{
-Function to compute the upper triangular factor of a pdInd object representing the factorization of the inverse variance matrix.
-}
-\details{
-Returns a factor for a right log-Cholesky object for positive-definite inverse variance matrix corresponding to a variance matrix with zero covariances except in the first row and column. i.e.
-$$
-V^{-1} = R'R
-$$
-with $R$ a right-triangular matrix.
-
-Then if the upper-diagonal elements of $R$ below the first row are all 0 then the corresponding variance matrix with will have zero covariances except on the first row (and column).
-}
-\examples{
-mat <- pdInd(diag(1:4))
-pdFactor(mat)
-Factor of a pdInd object.
-
 Function to compute the upper triangular factor of a pdInd object
 representing the factorization of the inverse variance matrix.
-
+}
+\details{
 Returns a factor for a right log-Cholesky object for positive-definite
 inverse variance matrix corresponding to a variance matrix with zero
-covariances except in the first row and column. i.e. $$ V^-1 = t(R)R $$ with
-$R$ a right-triangular matrix.
+covariances except in the first row and column. i.e. \eqn{V^{-1} = RR'} with
+\eqn{R} a right-triangular matrix.
 
-Then if the upper-diagonal elements of $R$ below the first row are all 0
+Then if the upper-diagonal elements of \eqn{R} below the first row are all 0
 then the corresponding variance matrix with will have zero covariances
 except on the first row (and column).
-
-mat <- pdInd(diag(1:4))
+}
+\examples{
+mat <- pdInd(diag(1:4), cov = diag(4))
 pdFactor(mat)
 }

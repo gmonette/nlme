@@ -73,30 +73,169 @@ cov
 fit_ind <- update(
      fit, 
      random = list(School = pdInd(~ 1 + SES + Sex + Minority, cov = cov)))
-summary(fit_ind)
+summary(fit_ind)                   # works
 round(zapsmall(getVarCov(fit_ind)),2)
 AIC(fit, fit_ind)
 anova(fit, fit_ind)
+# 
 # Not all patterns are feasible
+#
 cov <- diag(4)
-cov[2,3] <- 1
-cov
+cov[2,4] <- 1
+cov                                                        # works
 fit_ind2 <- update(
      fit, 
-     random = list(School = pdInd(~ 1 + SES + Sex + Minority, cov = cov)))
+     random = list(School = pdInd(~ 1 + SES + Sex + Minority, cov = cov)),
+     control = list(returnObject = TRUE))
 summary(fit_ind2)
 zapsmall(getVarCov(fit_ind2)) 
 zapsmall(getVarCov(fit_ind))
  
-cov <- diag(4)
+cov <- diag(4)                                             # seems to work
 cov[row(cov) < col(cov)] <- 1
 cov2 <- cov
 fit2 <- lme(MathAch ~ SES + Sex + Minority, data = MathAchieve,
              random = list(School = pdInd( ~ 1 + SES + Sex + Minority, cov = cov2)))
 zapsmall(getVarCov(fit2))
-cov3 <- diag(3)
+
+cov3 <- diag(3)                                            # works
 cov3
 fit3 <- lme(MathAch ~ SES + Sex + Minority, data = MathAchieve,
              random = list(School = pdInd( ~ 1 + SES + Sex, cov = cov3)))
 zapsmall(getVarCov(fit3))
+# 
+# Patterns with few zeros
+#
+cov <- diag(4)                                               # works
+cov[row(cov) < col(cov)] <- 1
+cov
+cov[1,4] <- 1
+cov[2,4] <- 0
+cov[3,4] <- 0
+
+cov
+cov4 <- cov
+fit4 <- lme(MathAch ~ SES + Sex + Minority, data = MathAchieve,
+             random = list(School = pdInd( ~ 1 + SES + Sex + Minority, cov = cov4)),
+             control = list(returnObject = TRUE))
+zapsmall(getVarCov(fit4))
+zapsmall(solve(getVarCov(fit4)))
+
+cov <- diag(4)                                               # makes Ginv have a 0 !!!!!
+cov[row(cov) < col(cov)] <- 1
+cov
+cov[1,4] <- 0
+cov
+cov5 <- cov
+fit5 <- lme(MathAch ~ SES + Sex + Minority, data = MathAchieve,
+             random = list(School = pdInd( ~ 1 + SES + Sex + Minority, cov = cov5)),
+             control = list(returnObject = TRUE))
+zapsmall(getVarCov(fit5))
+zapsmall(solve(getVarCov(fit5)))
+
+
+# puts 0 in Ginv:
+# Not an issue -- consistent with row orthogonality of R
+#   and consistent with column orthogonality of R
+
+cov <- diag(4)
+cov[row(cov) < col(cov)] <- 1
+cov[1,2] <- 0
+cov
+cov6 <- cov
+fit6 <- lme(MathAch ~ SES + Sex + Minority, data = MathAchieve,
+             random = list(School = pdInd( ~ 1 + SES + Sex + Minority, cov = cov6)),
+             control = list(returnObject = TRUE))
+zapsmall(getVarCov(fit6))
+zapsmall(solve(getVarCov(fit6)))
+
+# puts 0 in G:
+
+cov <- diag(4)
+cov[row(cov) < col(cov)] <- 1
+cov[3,4] <- 0
+cov
+cov5 <- cov
+fit5 <- lme(MathAch ~ SES + Sex + Minority, data = MathAchieve,
+             random = list(School = pdInd( ~ 1 + SES + Sex + Minority, cov = cov5)),
+             control = list(returnObject = TRUE))
+zapsmall(getVarCov(fit5))
+zapsmall(solve(getVarCov(fit5)))
+
+# puts 0 in G and Ginv (block diagonal)
+
+cov <- diag(4)
+cov[row(cov) < col(cov)] <- 1
+cov[3,4] <- 0
+cov[2,4] <- 0
+cov[1,4] <- 0
+
+cov
+cov5 <- cov
+fit5 <- lme(MathAch ~ SES + Sex + Minority, data = MathAchieve,
+             random = list(School = pdInd( ~ 1 + SES + Sex + Minority, cov = cov5)),
+             control = list(returnObject = TRUE))
+zapsmall(getVarCov(fit5))
+zapsmall(solve(getVarCov(fit5)))
+
+# puts 0 in Ginv, NOT G (block diagonal)
+
+cov <- diag(4)
+cov[row(cov) < col(cov)] <- 1
+cov[1,2] <- 0
+cov[1,3] <- 0
+cov[1,4] <- 1
+
+cov
+cov5 <- cov
+fit5 <- lme(MathAch ~ SES + Sex + Minority, data = MathAchieve,
+             random = list(School = pdInd( ~ 1 + SES + Sex + Minority, cov = cov5)),
+             control = list(returnObject = TRUE))
+zapsmall(getVarCov(fit5))
+zapsmall(solve(getVarCov(fit5)))
+
+# Hypothesis:
+# We get the patterns for G by taking inner products of 
+# of ROWS of R and for Ginv by taking inner products of
+# COLUMNS of R.
+
+# Try 8 possibilities for a 3 x 3
+
+fun <- function(cov){
+   G <- getVarCov(lme(MathAch ~ SES + Sex, data = MathAchieve,
+             random = list(School = pdInd( ~ 1 + SES + Sex, cov = cov)),
+             control = list(returnObject = TRUE)))
+   list(cov = cov, tcross = tcrossprod(cov), G = zapsmall(G), Ginv = zapsmall(solve(G)))
+}
+
+cov <- diag(3)
+cov[1,2] <- 1
+fun(cov)
+cov <- diag(3)
+cov[1,3] <- 1
+fun(cov)
+cov <- diag(3)
+cov[2,3] <- 1
+fun(cov)
+cov <- diag(3)
+cov[1,2] <- 1
+cov[1,3] <- 1
+fun(cov)
+cov <- diag(3)   # pattern in invers
+cov[1,2] <- 1
+cov[2,3] <- 1
+cov
+fun(cov)
+cov <- diag(3)    # pattern in inverse
+cov[1,3] <- 1
+cov[2,3] <- 1
+cov
+fun(cov)
+cov <- diag(3)    
+cov[1,3] <- 1
+cov[2,3] <- 1
+cov[1,2] <- 1
+fun(cov)
+             
+
 }

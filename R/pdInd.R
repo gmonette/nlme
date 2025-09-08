@@ -69,14 +69,16 @@ disp <- function(x, head = deparse(substitute(x)))
 #' fit_ind <- update(
 #'      fit, 
 #'      random = list(School = pdInd(~ 1 + SES + Sex + Minority, cov = cov)))
-#' summary(fit_ind)
+#' summary(fit_ind)                   # works
 #' round(zapsmall(getVarCov(fit_ind)),2)
 #' AIC(fit, fit_ind)
 #' anova(fit, fit_ind)
+#' # 
 #' # Not all patterns are feasible
+#' #
 #' cov <- diag(4)
 #' cov[2,4] <- 1
-#' cov
+#' cov                                                        # works
 #' fit_ind2 <- update(
 #'      fit, 
 #'      random = list(School = pdInd(~ 1 + SES + Sex + Minority, cov = cov)),
@@ -85,13 +87,14 @@ disp <- function(x, head = deparse(substitute(x)))
 #' zapsmall(getVarCov(fit_ind2)) 
 #' zapsmall(getVarCov(fit_ind))
 #'  
-#' cov <- diag(4)
+#' cov <- diag(4)                                             # seems to work
 #' cov[row(cov) < col(cov)] <- 1
 #' cov2 <- cov
 #' fit2 <- lme(MathAch ~ SES + Sex + Minority, data = MathAchieve,
 #'              random = list(School = pdInd( ~ 1 + SES + Sex + Minority, cov = cov2)))
 #' zapsmall(getVarCov(fit2))
-#' cov3 <- diag(3)
+#' 
+#' cov3 <- diag(3)                                            # works
 #' cov3
 #' fit3 <- lme(MathAch ~ SES + Sex + Minority, data = MathAchieve,
 #'              random = list(School = pdInd( ~ 1 + SES + Sex, cov = cov3)))
@@ -99,7 +102,7 @@ disp <- function(x, head = deparse(substitute(x)))
 #' # 
 #' # Patterns with few zeros
 #' #
-#' cov <- diag(4)
+#' cov <- diag(4)                                               # works
 #' cov[row(cov) < col(cov)] <- 1
 #' cov
 #' cov[1,4] <- 1
@@ -114,12 +117,10 @@ disp <- function(x, head = deparse(substitute(x)))
 #' zapsmall(getVarCov(fit4))
 #' zapsmall(solve(getVarCov(fit4)))
 #' 
-#' # puts 0 in Ginv:
-#' # Not an issue -- consistent with row orthogonality of R
-#' 
-#' cov <- diag(4)
+#' cov <- diag(4)                                               # makes Ginv have a 0 !!!!!
 #' cov[row(cov) < col(cov)] <- 1
-#' cov[1,2] <- 0
+#' cov
+#' cov[1,4] <- 0
 #' cov
 #' cov5 <- cov
 #' fit5 <- lme(MathAch ~ SES + Sex + Minority, data = MathAchieve,
@@ -127,6 +128,23 @@ disp <- function(x, head = deparse(substitute(x)))
 #'              control = list(returnObject = TRUE))
 #' zapsmall(getVarCov(fit5))
 #' zapsmall(solve(getVarCov(fit5)))
+
+#' 
+#' 
+#' # puts 0 in Ginv:
+#' # Not an issue -- consistent with row orthogonality of R
+#' #   and consistent with column orthogonality of R
+#' 
+#' cov <- diag(4)
+#' cov[row(cov) < col(cov)] <- 1
+#' cov[1,2] <- 0
+#' cov
+#' cov6 <- cov
+#' fit6 <- lme(MathAch ~ SES + Sex + Minority, data = MathAchieve,
+#'              random = list(School = pdInd( ~ 1 + SES + Sex + Minority, cov = cov6)),
+#'              control = list(returnObject = TRUE))
+#' zapsmall(getVarCov(fit6))
+#' zapsmall(solve(getVarCov(fit6)))
 #' 
 #' # puts 0 in G:
 #' 
@@ -178,6 +196,47 @@ disp <- function(x, head = deparse(substitute(x)))
 #' # of ROWS of R and for Ginv by taking inner products of
 #' # COLUMNS of R.
 #' 
+#' # Try 8 possibilities for a 3 x 3
+#' 
+#' fun <- function(cov){
+#'    G <- getVarCov(lme(MathAch ~ SES + Sex, data = MathAchieve,
+#'              random = list(School = pdInd( ~ 1 + SES + Sex, cov = cov)),
+#'              control = list(returnObject = TRUE)))
+#'    list(cov = cov, tcross = tcrossprod(cov), G = zapsmall(G), Ginv = zapsmall(solve(G)))
+#' }
+#' 
+#' cov <- diag(3)
+#' cov[1,2] <- 1
+#' fun(cov)
+#' cov <- diag(3)
+#' cov[1,3] <- 1
+#' fun(cov)
+#' cov <- diag(3)
+#' cov[2,3] <- 1
+#' fun(cov)
+#' cov <- diag(3)
+#' cov[1,2] <- 1
+#' cov[1,3] <- 1
+#' fun(cov)
+#' cov <- diag(3)   # pattern in invers
+#' cov[1,2] <- 1
+#' cov[2,3] <- 1
+#' cov
+#' fun(cov)
+#' cov <- diag(3)    # pattern in inverse
+#' cov[1,3] <- 1
+#' cov[2,3] <- 1
+#' cov
+#' fun(cov)
+#' cov <- diag(3)    
+#' cov[1,3] <- 1
+#' cov[2,3] <- 1
+#' cov[1,2] <- 1
+#' fun(cov)
+#'              
+
+
+#' 
 
 #' @export
 pdInd <-
@@ -227,7 +286,7 @@ pdConstruct.pdInd <-
     disp(cov)
     if(!is.null(attr(object,'cov'))) cov <- attr(object,'cov')
     if(!is.null(attr(value,'cov'))) cov <- attr(value,'cov')
-    val <- nlme:::pdConstruct.pdMat(object, 
+    val <- pdConstruct.pdMat(object, 
                                     value = value,
                                     form = form, 
                                     nam = nam, 
@@ -269,25 +328,6 @@ pdConstruct.pdInd <-
     val
   }
 
-#' Factor of a pdInd object.
-#'
-#' Function to compute the upper triangular factor of a pdInd object representing the factorization of the inverse variance matrix.
-#'
-#' Returns a factor for a right log-Cholesky object for positive-definite inverse variance matrix corresponding to a variance matrix with zero covariances except in the first row and column. i.e.
-#' $$
-#' V^{-1} = R'R
-#' $$
-#' with $R$ a right-triangular matrix.
-#'
-#' Then if the upper-diagonal elements of $R$ below the first row are all 0 then the corresponding variance matrix with will have zero covariances except on the first row (and column).
-#'
-#' @param object a 'pdInd' object from which the right-triangular factor of the variance matrix it represents will be extracted
-#' @return the full right-triangular factor, including zeros in the lower triangle, is returned as a vector in column order
-#' @examples
-#' mat <- pdInd(diag(1:4))
-#' pdFactor(mat)
-
-
 
 #' Factor of a pdInd object.
 #' 
@@ -296,10 +336,10 @@ pdConstruct.pdInd <-
 #' 
 #' Returns a factor for a right log-Cholesky object for positive-definite
 #' inverse variance matrix corresponding to a variance matrix with zero
-#' covariances except in the first row and column. i.e. $$ V^-1 = t(R)R $$ with
-#' $R$ a right-triangular matrix.
+#' covariances except in the first row and column. i.e. \eqn{V^{-1} = RR'} with
+#' \eqn{R} a right-triangular matrix.
 #' 
-#' Then if the upper-diagonal elements of $R$ below the first row are all 0
+#' Then if the upper-diagonal elements of \eqn{R} below the first row are all 0
 #' then the corresponding variance matrix with will have zero covariances
 #' except on the first row (and column).
 #' 
@@ -308,7 +348,7 @@ pdConstruct.pdInd <-
 #' @return the full right-triangular factor, including zeros in the lower
 #' triangle, is returned as a vector in column order
 #' @examples
-#' mat <- pdInd(diag(1:4))
+#' mat <- pdInd(diag(1:4), cov = diag(4))
 #' pdFactor(mat)
 #' @export
 pdFactor.pdInd <-
@@ -404,9 +444,9 @@ function (object, unconstrained = TRUE, ...)
 #' returns the equivalent right-triangular factor ($V = R'R$).
 #' 
 #' 
-#' @param x a factor of a positive definite matrix $V$
-#' @return a right-triangular factor of the same $V$.
-#' @seealso \code{f2R}
+#' @param A a factor of a positive definite matrix \eqn{V}.
+#' @return a right-triangular factor of the same \eqn{V}.
+#' @seealso \code{f2L}
 #' @export
 f2R <- function(A) {
   val <- qr.R(qr(A))
@@ -418,12 +458,12 @@ f2R <- function(A) {
 
 #' Turns a factor of a PD matrix to a left-triangular factor
 #' 
-#' This function takes a factor of a positive-definite matrix ($V = A'A$ ) and
-#' returns the equivalent left-triangular factor ($V = L'L$).
+#' This function takes a factor of a positive-definite matrix (\eqn{V = A'A}) and
+#' returns the equivalent left-triangular factor (\eqn{V = L'L}).
 #' 
-#' @param A a factor of a positive definite matrix $V$
-#' @return a right-triangular factor of the same $V$.
-#' @seealso \code{f2L}
+#' @param A a factor of a positive definite matrix \eqn{V}.
+#' @return a right-triangular factor of the same \eqn{V}.
+#' @seealso \code{f2R}
 #' @export
 f2L <- function(A) {
   A[] <- rev(A)

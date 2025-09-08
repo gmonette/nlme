@@ -1106,7 +1106,7 @@ summary.pdLogChol <-
 ####   parametrization
 
 ####* Constructor
-
+#' @export
 pdNatural <-
   ## Constructor for the pdNatural class
   function(value = numeric(0), form = NULL, nam = NULL, data = parent.frame())
@@ -1118,6 +1118,7 @@ pdNatural <-
 
 ####* Methods for local generics
 
+#' @export
 pdConstruct.pdNatural <-
   function(object, value = numeric(0), form = formula(object),
 	   nam = Names(object), data = parent.frame(), ...)
@@ -1151,6 +1152,7 @@ pdConstruct.pdNatural <-
   val
 }
 
+#' @export
 pdFactor.pdNatural <-
   function(object)
 {
@@ -1161,6 +1163,7 @@ pdFactor.pdNatural <-
      as.double(object))$Factor
 }
 
+#' @export
 pdMatrix.pdNatural <-
   function(object, factor = FALSE)
 {
@@ -1179,6 +1182,7 @@ pdMatrix.pdNatural <-
 
 ####* Methods for standard generics
 
+#' @export
 coef.pdNatural <-
   function(object, unconstrained = TRUE, ...)
 {
@@ -1198,6 +1202,7 @@ coef.pdNatural <-
   }
 }
 
+#' @export
 Dim.pdNatural <-
   function(object, ...)
 {
@@ -1209,6 +1214,7 @@ Dim.pdNatural <-
   }
 }
 
+#' @export
 logDet.pdNatural <-
   function(object, ...)
 {
@@ -1219,6 +1225,7 @@ logDet.pdNatural <-
 }
 
 
+#' @export
 solve.pdNatural <-
   function(a, b, ...)
 {
@@ -1246,6 +1253,7 @@ solve.pdNatural <-
   a
 }
 
+#' @export
 summary.pdNatural <-
   function(object,
 	   structName = "General positive-definite, Natural parametrization",
@@ -1262,6 +1270,7 @@ summary.pdNatural <-
 
 ####* Constructor
 
+#' @export
 pdDiag <-
   ## Constructor for the pdDiag class
   function(value = numeric(0), form = NULL, nam = NULL, data = parent.frame())
@@ -1273,6 +1282,7 @@ pdDiag <-
 
 ####* Methods for local generics
 
+#' @export
 corMatrix.pdDiag <-
   function(object, ...)
 {
@@ -1287,6 +1297,7 @@ corMatrix.pdDiag <-
   val
 }
 
+#' @export
 pdConstruct.pdDiag <-
   function(object, value = numeric(0), form = formula(object),
 	   nam = Names(object), data = parent.frame(), ...)
@@ -1313,12 +1324,14 @@ pdConstruct.pdDiag <-
   val
 }
 
+#' @export
 pdFactor.pdDiag <-
   function(object)
 {
   diag(exp(as.vector(object)), length(object))
 }
 
+#' @export
 pdMatrix.pdDiag <-
   function(object, factor = FALSE)
 {
@@ -1338,6 +1351,7 @@ pdMatrix.pdDiag <-
 
 ####* Methods for standard generics
 
+#' @export
 coef.pdDiag <-
   function(object, unconstrained = TRUE, ...)
 {
@@ -1349,6 +1363,7 @@ coef.pdDiag <-
   }
 }
 
+#' @export
 Dim.pdDiag <-
   function(object, ...)
 {
@@ -1360,6 +1375,7 @@ Dim.pdDiag <-
   }
 }
 
+#' @export
 logDet.pdDiag <-
   function(object, ...)
 {
@@ -1369,6 +1385,7 @@ logDet.pdDiag <-
   sum(as.vector(object))
 }
 
+#' @export
 solve.pdDiag <-
   function(a, b, ...)
 {
@@ -1379,6 +1396,7 @@ solve.pdDiag <-
   a
 }
 
+#' @export
 summary.pdDiag <-
   function(object, structName = "Diagonal", ...)
 {
@@ -1392,6 +1410,7 @@ summary.pdDiag <-
 
 ####* Constructor
 
+#' @export
 pdIdent <-
   ## Constructor for the pdIdent class
   function(value = numeric(0), form = NULL, nam = NULL, data = parent.frame())
@@ -1403,6 +1422,7 @@ pdIdent <-
 
 ####* Methods for local generics
 
+#' @export
 corMatrix.pdIdent <-
   function(object, ...)
 {
@@ -1422,6 +1442,7 @@ corMatrix.pdIdent <-
   val
 }
 
+#' @export
 pdConstruct.pdIdent <-
   function(object, value = numeric(0), form = formula(object),
 	   nam = Names(object), data = parent.frame(), ...)
@@ -1458,6 +1479,7 @@ pdConstruct.pdIdent <-
   val
 }
 
+#' @export
 pdFactor.pdIdent <-
   function(object)
 {
@@ -1465,6 +1487,7 @@ pdFactor.pdIdent <-
 }
 
 
+#' @export
 pdMatrix.pdIdent <-
   function(object, factor = FALSE)
 {
@@ -1487,6 +1510,7 @@ pdMatrix.pdIdent <-
 
 ####* Methods for standard generics
 
+#' @export
 coef.pdIdent <-
   function(object, unconstrained = TRUE, ...)
 {
@@ -1495,6 +1519,7 @@ coef.pdIdent <-
            names = c(paste("sd(", deparse(formula(object)[[2]]),")",sep = "")))
 }
 
+#' @export
 Dim.pdIdent <-
   function(object, ...)
 {
@@ -1505,12 +1530,15 @@ Dim.pdIdent <-
   }
 }
 
+#' @export
+#' @export
 logDet.pdIdent <-
   function(object, ...)
 {
   attr(object, "ncol") * as.vector(object)
 }
 
+#' @export
 solve.pdIdent <-
   function(a, b, ...)
 {
@@ -1521,6 +1549,7 @@ solve.pdIdent <-
   a
 }
 
+#' @export
 summary.pdIdent <-
   function(object, structName = "Multiple of an Identity", ...)
 {
@@ -1531,6 +1560,7 @@ summary.pdIdent <-
 
 ####* Constructor
 
+#' @export
 pdCompSymm <-
   ## Constructor for the pdCompSymm class
   function(value = numeric(0), form = NULL, nam = NULL, data = parent.frame())
@@ -1542,6 +1572,7 @@ pdCompSymm <-
 
 ####* Methods for local generics
 
+#' @export
 corMatrix.pdCompSymm <-
   function(object, ...)
 {
@@ -1565,6 +1596,7 @@ corMatrix.pdCompSymm <-
   value
 }
 
+#' @export
 pdConstruct.pdCompSymm <-
   function(object, value = numeric(0), form = formula(object),
 	   nam = Names(object), data = parent.frame(), ...)
@@ -1609,6 +1641,7 @@ pdConstruct.pdCompSymm <-
   val
 }
 
+#' @export
 pdFactor.pdCompSymm <-
   function(object)
 {
@@ -1619,6 +1652,7 @@ pdFactor.pdCompSymm <-
      as.double(object))$Factor
 }
 
+#' @export
 pdMatrix.pdCompSymm <-
   function(object, factor = FALSE)
 {
@@ -1647,6 +1681,7 @@ pdMatrix.pdCompSymm <-
 
 ####* Methods for standard generics
 
+#' @export
 coef.pdCompSymm <-
   function(object, unconstrained = TRUE, ...)
 {
@@ -1663,6 +1698,7 @@ coef.pdCompSymm <-
   }
 }
 
+#' @export
 Dim.pdCompSymm <-
   function(object, ...)
 {
@@ -1673,12 +1709,14 @@ Dim.pdCompSymm <-
   }
 }
 
+#' @export
 logDet.pdCompSymm <-
   function(object, ...)
 {
   attr(pdMatrix(object, factor = TRUE), "logDet")
 }
 
+#' @export
 summary.pdCompSymm <-
   function(object, structName = "Compound Symmetry", ...)
 {
@@ -1689,6 +1727,7 @@ summary.pdCompSymm <-
 
 #####* Constructor
 
+#' @export
 pdBlocked <-
   ## Constructor for the pdBlocked class
   function(value = numeric(0), form = NULL, nam = NULL, data = parent.frame(),
@@ -1701,6 +1740,7 @@ pdBlocked <-
 
 ####* Methods for local generics
 
+#' @export
 corMatrix.pdBlocked <-
   function(object, ...)
 {
@@ -1725,6 +1765,7 @@ corMatrix.pdBlocked <-
 }
 
 
+#' @export
 pdConstruct.pdBlocked <-
   function(object, value = numeric(0), form = formula(object, TRUE),
 	   nam = Names(object, TRUE), data = parent.frame(),
@@ -1936,6 +1977,7 @@ pdConstruct.pdBlocked <-
   }
 }
 
+#' @export
 pdMatrix.pdBlocked <-
   function(object, factor = FALSE)
 {
@@ -1962,12 +2004,14 @@ pdMatrix.pdBlocked <-
 
 ####* Methods for standard generics
 
+#' @export
 coef.pdBlocked <-
   function(object, unconstrained = TRUE, ...)
 {
   unlist(lapply(object, coef, unconstrained))
 }
 
+#' @export
 "coef<-.pdBlocked" <-
   function(object, ..., value)
 {
@@ -1985,6 +2029,7 @@ coef.pdBlocked <-
   object
 }
 
+#' @export
 formula.pdBlocked <-
   function(x, asList = TRUE, ...)
 {
@@ -2022,18 +2067,21 @@ formula.pdBlocked <-
   eval(parse(text = paste("~", aux)))
 }
 
+#' @export
 isInitialized.pdBlocked <-
   function(object)
 {
   all(unlist(lapply(object, isInitialized)))
 }
 
+#' @export
 logDet.pdBlocked <-
   function(object, ...)
 {
   sum(unlist(lapply(object, logDet)))
 }
 
+#' @export
 "matrix<-.pdBlocked" <-
   function(object, value)
 {
@@ -2059,6 +2107,7 @@ logDet.pdBlocked <-
   object
 }
 
+#' @export
 Names.pdBlocked <-
   function(object, asList = FALSE, ...)
 {
@@ -2066,6 +2115,7 @@ Names.pdBlocked <-
   else attr(object, "Dimnames")[[2]]
 }
 
+#' @export
 "Names<-.pdBlocked" <-
   function(object, ..., value)
 {
@@ -2076,12 +2126,14 @@ Names.pdBlocked <-
   }
 }
 
+#' @export
 pdFactor.pdBlocked <-
   function(object)
 {
   pdMatrix(object, factor = TRUE)
 }
 
+#' @export
 solve.pdBlocked <-
   function(a, b, ...)
 {
@@ -2092,6 +2144,7 @@ solve.pdBlocked <-
   a
 }
 
+#' @export
 summary.pdBlocked <-
   function(object, structName = "Blocked", ...)
 {
@@ -2104,6 +2157,7 @@ summary.pdBlocked <-
   value
 }
 
+#' @export
 "[.pdBlocked" <-
   function(x, i, j, drop = TRUE)
 {
@@ -2135,3 +2189,4 @@ summary.pdBlocked <-
     eval(mCall)
   }
 }
+

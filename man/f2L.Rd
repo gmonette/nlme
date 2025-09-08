@@ -7,15 +7,15 @@
 f2L(A)
 }
 \arguments{
-\item{A}{a factor of a positive definite matrix $V$}
+\item{A}{a factor of a positive definite matrix \eqn{V}.}
 }
 \value{
-a right-triangular factor of the same $V$.
+a right-triangular factor of the same \eqn{V}.
 }
 \description{
-This function takes a factor of a positive-definite matrix ($V = A'A$ ) and
-returns the equivalent left-triangular factor ($V = L'L$).
+This function takes a factor of a positive-definite matrix (\eqn{V = A'A}) and
+returns the equivalent left-triangular factor (\eqn{V = L'L}).
 }
 \seealso{
-\code{f2L}
+\code{f2R}
 }
