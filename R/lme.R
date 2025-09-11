@@ -2147,7 +2147,7 @@ print.summary.lme <- function(x, verbose = FALSE, ...)
   if (nrow(x$tTable) > 1) {
     corr <- x$corFixed
     class(corr) <- "correlation"
-    print(corr, title = " Correlation:", ...)
+    if(verbose) print(corr, title = " Correlation:", ...)             # GM modification
   }
   cat("\nStandardized Within-Group Residuals:\n")
   print(x$residuals, ...)

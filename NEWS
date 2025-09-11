@@ -1,2 +1,3 @@
-2025-09-07
-  - changed version to 0.0-9999
+2025-09-10
+  - changed print.summary.lme so correlation matrix prints only if verbose
+  - changed version to 3.1.9000 so DHARMa can run
