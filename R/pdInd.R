@@ -14,7 +14,20 @@ disp <- function(x, head = deparse(substitute(x)))
   }
   invisible(x)
 }
-
+#' Generate a covariance pattern matrix for pdInd
+#' 
+#' @param n number of random effects
+#' @param ... positions in matrix to flip from 0 to 1 or 1 to 0
+#' @export
+covind <- function(n, ...) {
+  ret <- diag(n)
+  ret[1,] <- 1
+  a <- list(...)
+  for( i in a){
+    ret[i] <- 1 - ret[i]
+  }
+  ret
+}
 #' Construct pdInd object
 #' 
 #' This function is a constructor for the \code{pdInd} class used to
@@ -61,18 +74,41 @@ disp <- function(x, head = deparse(substitute(x)))
 #' @examples
 #' fit <- lme(MathAch ~ SES + Sex + Minority, data = MathAchieve,
 #'              random = list(School = ~ 1 + SES + Sex + Minority))
-#' summary(fit)
-#' getVarCov(fit)
-#' cov <- diag(4)
-#' cov[rbind(c(1,2),c(1,3), c(1,4))] <- 1
-#' cov
-#' fit_ind <- update(
-#'      fit, 
-#'      random = list(School = pdInd(~ 1 + SES + Sex + Minority, cov = cov)))
-#' summary(fit_ind)                   # works
-#' round(zapsmall(getVarCov(fit_ind)),2)
-#' AIC(fit, fit_ind)
-#' anova(fit, fit_ind)
+#'  covind <- function(n, ...) {
+#'    ret <- diag(n)
+#'    ret[1,] <- 1
+#'    a <- list(...)
+#'    for(i in a){
+#'      ret[i] <- 1 - ret[i]
+#'    }
+#'    ret
+#' }
+#' # methods(class = 'pdInd')
+#' # covind(3)
+#' # covind(4, 10)             
+#' # pdi <- pdInd(~1+ SES + Sex, data = MathAchieve, cov = covind(3))   
+#' # Initialize(list(School = pdi), data = MathAchieve)
+#' # Initialize(pdi, data = MathAchieve)    
+#' # z <-  reStruct(list(School = pdi), data = MathAchieve)
+#' # Initialize(z, data, conLin = list(X= model.matrix(~ SES + Sex, data = MathAchieve), y = MathAchieve$MathAch))
+#' # coef(pdi)
+#' # unclass(pdi) 
+#' # solve(pdi)
+#' # pdConstruct(pdi)
+#' # pdMatrix(pdi)
+#' # class(pdi)
+#' # summary(fit)
+#' # getVarCov(fit)
+#' # cov <- diag(4)
+#' # cov[rbind(c(1,2),c(1,3), c(1,4))] <- 1
+#' # cov
+#' # fit_ind <- update(
+#' #      fit, 
+#' #      random = list(School = pdInd(~ 1 + SES + Sex + Minority, cov = cov)))
+#' # summary(fit_ind)                   # works
+#' # round(zapsmall(getVarCov(fit_ind)),2)
+#' # AIC(fit, fit_ind)
+#' # anova(fit, fit_ind)
 #' # 
 #' # Not all patterns are feasible
 #' #
@@ -453,6 +489,10 @@ function (object, unconstrained = TRUE, ...)
 #' @param A a factor of a positive definite matrix \eqn{V}.
 #' @return a right-triangular factor of the same \eqn{V}.
 #' @seealso \code{f2L}
+#' @examples
+#' A <- matrix(rnorm(9), 3,3)
+#' R <- f2R(A)
+#' t(A) %*% A - t(R) %*% R
 #' @export
 f2R <- function(A) {
   val <- qr.R(qr(A))
@@ -470,6 +510,11 @@ f2R <- function(A) {
 #' @param A a factor of a positive definite matrix \eqn{V}.
 #' @return a right-triangular factor of the same \eqn{V}.
 #' @seealso \code{f2R}
+#' @examples
+#' A <- matrix(rnorm(9), 3,3)
+#' L <- f2L(A)
+#' L
+#' t(A) %*% A - t(L) %*% L
 #' @export
 f2L <- function(A) {
   A[] <- rev(A)
@@ -483,10 +528,10 @@ if(TESTS) {
   
   
   
-  library(nlme)
   library(magrittr)
   library(spida2)
   library(gnew)
+  library(nlme)
   V <- diag(3:6)
   V[1,2:4] <- 1:3
   V[2:4,1] <- 1:3
@@ -526,7 +571,7 @@ if(TESTS) {
   
   
   
-  f <- pdInd(solve(V))
+  f <- pdInd(solve(V),cov = covind(4))
   pdMatrix(solve(f))-V    # all machine zeroes
   
   
@@ -597,6 +642,8 @@ if(TESTS) {
   
   # test with lme
   # library(spida)
+  hs <- spida2::hs
+  disp <- spida2::disp
   head(hs)
   hs$sex <- 1*(hs$Sex == 'Female')
   fit1 <- lme(mathach ~ ses + sex, hs,
@@ -609,7 +656,7 @@ if(TESTS) {
               control = list(msVerbose=T,returnObject=T))
   hs$sex <- with(hs, 1*(Sex == "Male"))
   fit4 <- lme(mathach ~ ses + sex, hs,
-              random = list( school = pdInd( ~ 1 + ses + sex)),
+              random = list( school = pdInd( ~ 1 + ses + sex, cov = covind(3))),
               control = list(msVerbose=T,returnObject=T,msMaxIter=1000))
   fit5 <- lme(mathach ~ ses + Sex, hs,
               random = list( school = pdInd( ~ 1 + ses + Sex)),
@@ -668,3 +715,130 @@ fit6b$modelStruct$reStruct$school
   
   
 }
+
+###*# pdSymm - a class of general pd matrices
+
+####* Constructor
+
+pdSymm2 <-
+  ## Constructor for the pdSymm2 class
+  function(value = numeric(0), form = NULL, nam = NULL, data = parent.frame())
+  {
+    object <- numeric(0)
+    class(object) <- c("pdSymm2", "pdMat")
+    pdConstruct(object, value, form, nam, data)
+  }
+
+####* Methods for local generics
+
+pdConstruct.pdSymm2 <-
+  function(object, value = numeric(0), form = formula(object),
+           nam = Names(object), data = parent.frame(), ...)
+  {
+    val <- NextMethod()
+    if (length(val) == 0) {               # uninitialized object
+      class(val) <- c("pdSymm2", "pdMat")
+      return(val)
+    }
+    
+    if (is.matrix(val)) {
+      vald <- svd(val, nu = 0)
+      object <- vald$v %*% (log(vald$d) * t(vald$v))
+      value <- object[row(object) <= col(object)]
+      attributes(value) <- attributes(val)[names(attributes(val)) !=  "dim"]
+      class(value) <- c("pdSymm2", "pdMat")
+      return(value)
+    }
+    Ncol <- round((sqrt(8*length(val) + 1) - 1)/2)
+    if (length(val) != round((Ncol * (Ncol + 1))/2)) {
+      stop(gettextf("an object of length %d does not match the required parameter size",
+                    length(val)), domain = NA)
+    }
+    class(val) <- c("pdSymm2", "pdMat")
+    val
+  }
+
+pdFactor.pdSymm2 <-
+  function(object)
+  {
+    Ncol <- round((-1 + sqrt(1 + 8 * length(object))) / 2)
+    .C(matrixLog_pd,
+       Factor = double(Ncol * Ncol),
+       as.integer(Ncol),
+       as.double(object))$Factor
+  }
+
+pdMatrix.pdSymm2 <- function(object, factor = FALSE)
+{
+  if (!isInitialized(object))
+    stop("cannot extract matrix from an uninitialized object")
+  if (factor) {
+    Ncol <- Dim(object)[2]
+    value <- array(pdFactor(object), c(Ncol, Ncol), attr(object, "Dimnames"))
+    attr(value, "logDet") <- sum(log(abs(svd.d(value))))
+    value
+  } else {
+    NextMethod()
+  }
+}
+
+####* Methods for standard generics
+
+coef.pdSymm2 <-
+  function(object, unconstrained = TRUE, ...)
+  {
+    if (unconstrained || !isInitialized(object)) NextMethod()
+    else {				# upper triangular elements
+      val <- as.matrix(object)
+      aN <- Names(object)
+      aN1 <- paste("cov(", aN, sep ="")
+      aN2 <- paste(aN, ")", sep ="")
+      aNmat <- t(outer(aN1, aN2, paste, sep = ","))
+      aNmat[row(aNmat) == col(aNmat)] <- paste("var(",aN,")",sep="")
+      val <- val[row(val) <= col(val)]
+      names(val) <- aNmat[row(aNmat) <= col(aNmat)]
+      val
+    }
+  }
+
+Dim.pdSymm2 <-
+  function(object, ...)
+  {
+    if (isInitialized(object)) {
+      val <- round((sqrt(8*length(object) + 1) - 1)/2)
+      c(val, val)
+    } else {
+      NextMethod()
+    }
+  }
+
+logDet.pdSymm2 <-
+  function(object, ...)
+  {
+    if (!isInitialized(object)) {
+      stop("cannot extract the log of the determinant from an uninitialized object")
+    }
+    attr(pdMatrix(object, factor = TRUE), "logDet")
+  }
+
+solve.pdSymm2 <-
+  function(a, b, ...)
+  {
+    if (!isInitialized(a)) {
+      stop("cannot extract the inverse from an uninitialized object")
+    }
+    coef(a) <- -coef(a, TRUE)
+    a
+  }
+
+summary.pdSymm2 <-
+  function(object,
+           structName = "General positive-definite2", ...)
+  {
+    summary.pdMat(object, structName)
+  }
+
+### No need to implement other methods as the methods for pdMat
+### are sufficient.
+
+

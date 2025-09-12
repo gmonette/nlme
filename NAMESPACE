@@ -44,12 +44,13 @@ export(ACF, allCoef, asOneFormula, asTable, augPred, balancedGrouped,
        pdBlocked, pdCompSymm, pdConstruct, pdDiag,
        pdFactor, pdIdent, pdLogChol, pdMat, pdMatrix, pdNatural,
        pdSymm, phenoModel, pooledSD, quinModel,
+     pdSymm2,
        random.effects, ranef, recalc, reStruct, simulate.lme,
        splitFormula, varComb, varConstPower, VarCorr, varExp,
        varConstProp,
        varFixed, varFunc, varIdent, Variogram, varPower,
        varWeights,
-     f2L, f2R, pdInd                                               # added by GM
+     f2L, f2R, pdInd, covind                                               # added by GM
      )
 
 # called directly via do.call
@@ -100,6 +101,7 @@ S3method(coef, pdIdent)
 S3method(coef, pdMat)
 S3method(coef, pdNatural)
 S3method(coef, pdSymm)
+S3method(coef, pdSymm2)
 S3method(coef, pdInd)                      # added GM
 S3method(coef, reStruct)
 S3method(coef, summary.lme, getCTable)
@@ -173,6 +175,7 @@ S3method(Dim, pdIdent)
 S3method(Dim, pdMat)
 S3method(Dim, pdNatural)
 S3method(Dim, pdSymm)
+S3method(Dim, pdSymm2)
 S3method(extractAIC, gls)
 S3method(extractAIC, lme)
 S3method(fitted, gls)
@@ -268,6 +271,7 @@ S3method(logDet, pdIdent)
 S3method(logDet, pdMat)
 S3method(logDet, pdNatural)
 S3method(logDet, pdSymm)
+S3method(logDet, pdSymm2)
 S3method(logDet, reStruct)
 S3method(logLik, corStruct)
 S3method(logLik, gls)
@@ -317,7 +321,8 @@ S3method(pdConstruct, pdLogChol)
 S3method(pdConstruct, pdMat)
 S3method(pdConstruct, pdNatural)
 S3method(pdConstruct, pdSymm)
-S3method(pdConstruct, pdInd)
+S3method(pdConstruct, pdSymm2)
+S3method(pdConstruct, pdInd)                      # added GM
 S3method(pdFactor, pdBlocked)
 S3method(pdFactor, pdCompSymm)
 S3method(pdFactor, pdDiag)
@@ -326,6 +331,7 @@ S3method(pdFactor, pdLogChol)
 S3method(pdFactor, pdMat)
 S3method(pdFactor, pdNatural)
 S3method(pdFactor, pdSymm)
+S3method(pdFactor, pdSymm2)
 S3method(pdFactor, pdInd)                        # added GM
 S3method(pdFactor, reStruct)
 S3method(pdMatrix, pdBlocked)
@@ -335,6 +341,7 @@ S3method(pdMatrix, pdIdent)
 S3method(pdMatrix, pdMat)
 S3method(pdMatrix, pdNatural)
 S3method(pdMatrix, pdSymm)
+S3method(pdMatrix, pdSymm2)
 S3method(pdMatrix, pdInd)                        # added GM
 S3method(pdMatrix, reStruct)
 S3method(plot, ACF)
@@ -431,6 +438,7 @@ S3method(solve, pdLogChol)
 S3method(solve, pdMat)
 S3method(solve, pdNatural)
 S3method(solve, pdSymm)
+S3method(solve, pdSymm2)
 S3method(solve, pdInd)                                     # added GM
 S3method(solve, reStruct)
 S3method(summary, corAR1)
@@ -458,6 +466,7 @@ S3method(summary, pdLogChol)
 S3method(summary, pdMat)
 S3method(summary, pdNatural)
 S3method(summary, pdSymm)
+S3method(summary, pdSymm2)
 S3method(summary, reStruct)
 S3method(summary, varComb)
 S3method(summary, varConstPower)
