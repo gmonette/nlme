@@ -65,18 +65,41 @@ variable with a random slope.
 \examples{
 fit <- lme(MathAch ~ SES + Sex + Minority, data = MathAchieve,
              random = list(School = ~ 1 + SES + Sex + Minority))
-summary(fit)
-getVarCov(fit)
-cov <- diag(4)
-cov[rbind(c(1,2),c(1,3), c(1,4))] <- 1
-cov
-fit_ind <- update(
-     fit, 
-     random = list(School = pdInd(~ 1 + SES + Sex + Minority, cov = cov)))
-summary(fit_ind)                   # works
-round(zapsmall(getVarCov(fit_ind)),2)
-AIC(fit, fit_ind)
-anova(fit, fit_ind)
+ covind <- function(n, ...) {
+   ret <- diag(n)
+   ret[1,] <- 1
+   a <- list(...)
+   for(i in a){
+     ret[i] <- 1 - ret[i]
+   }
+   ret
+}
+# methods(class = 'pdInd')
+# covind(3)
+# covind(4, 10)             
+# pdi <- pdInd(~1+ SES + Sex, data = MathAchieve, cov = covind(3))   
+# Initialize(list(School = pdi), data = MathAchieve)
+# Initialize(pdi, data = MathAchieve)    
+# z <-  reStruct(list(School = pdi), data = MathAchieve)
+# Initialize(z, data, conLin = list(X= model.matrix(~ SES + Sex, data = MathAchieve), y = MathAchieve$MathAch))
+# coef(pdi)
+# unclass(pdi) 
+# solve(pdi)
+# pdConstruct(pdi)
+# pdMatrix(pdi)
+# class(pdi)
+# summary(fit)
+# getVarCov(fit)
+# cov <- diag(4)
+# cov[rbind(c(1,2),c(1,3), c(1,4))] <- 1
+# cov
+# fit_ind <- update(
+#      fit, 
+#      random = list(School = pdInd(~ 1 + SES + Sex + Minority, cov = cov)))
+# summary(fit_ind)                   # works
+# round(zapsmall(getVarCov(fit_ind)),2)
+# AIC(fit, fit_ind)
+# anova(fit, fit_ind)
 # 
 # Not all patterns are feasible
 #

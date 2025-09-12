@@ -322,10 +322,10 @@ pdConstruct.pdInd <-
     disp(cov)
     if(!is.null(attr(object,'cov'))) cov <- attr(object,'cov')
     if(!is.null(attr(value,'cov'))) cov <- attr(value,'cov')
-    val <- pdConstruct.pdMat(object, 
+    val <- pdConstruct.pdMat(object,
                                     value = value,
-                                    form = form, 
-                                    nam = nam, 
+                                    form = form,
+                                    nam = nam,
                                     data = data)
     attr(val,'cov') <- cov 
     if (length(val) == 0) {
@@ -350,7 +350,7 @@ pdConstruct.pdInd <-
       attr(value,"cov") <- cov
       class(value) <- c("pdInd", "pdMat")
       attr(value,"invert") <- FALSE
-      disp('258')
+      disp('353')
       disp(value)
       return(value)
     }
@@ -444,7 +444,6 @@ pdMatrix.pdInd <-
 #' solve method for pdInd objects.
 #' 
 #' This produces a pdInd object corresponding to the inverse of its argument.
-#' 
 #' 
 #' @param a the pdInd object to invert.
 #' @param b is unused but copied from \code{solve.pdLogChol}.

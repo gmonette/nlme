@@ -16,6 +16,11 @@ a right-triangular factor of the same \eqn{V}.
 This function takes a factor of a positive-definite matrix ($V = A'A$ ) and
 returns the equivalent right-triangular factor ($V = R'R$).
 }
+\examples{
+A <- matrix(rnorm(9), 3,3)
+R <- f2R(A)
+t(A) \%*\% A - t(R) \%*\% R
+}
 \seealso{
 \code{f2L}
 }
