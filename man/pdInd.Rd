@@ -24,9 +24,11 @@ row/column names for the matrix represented by \code{object}.}
 \item{data}{and optional data frame i which to evaluate the variables names
 in \code{value} and \code{form}. ...}
 
-\item{cov}{optional position in lower triangle of covariances that are
-estimated and, thus, possibly non-zero. The default is that the covariances
-in the first column are estimated and possibly non-zero.}
+\item{cov}{matrix of 0's and 1's showing pattern of zero and non-zero
+elements in \eqn{R} where \eqn{R} is the left upper-triangular factor of the
+random effects variance matrix \eqn{G = RR'}. To make sure that the
+pattern will also apply to \eqn{G}, check the pattern of 0's in
+\code{tcrossprod(cov)}.}
 
 \item{object}{an object inheriting from the class \code{pdInd}, representing
 a positive definite matrix with zero covariances except in the first row and
@@ -35,12 +37,13 @@ column.}
 \description{
 This function is a constructor for the \code{pdInd} class used to
 represent a positive-definite random effects variance matrix 
-with some specified patterns of zero covariances.
+with a specified pattern of zero covariances.
 }
 \details{
 Mixed models in which many predictors have random slopes often fail to converge 
-in part because of the large number of parameters in the full covariance (G)
-matrix for random effects. One way of fitting a more parsimonious model that
+because of the large number of parameters in the random effects covariance matrix, \eqn{G}.
+
+One way of fitting a more parsimonious model that
 includes random slopes is to use \code{\link[nlme]{pdDiag}} with zeros off the
 diagonal. However, this also forces zero covariances between random slopes and
 and the random intercept, resulting in a model that is not equivariant
@@ -49,7 +52,7 @@ slopes. The alternative remedy of omitting random slopes for some
 predictors can lead to biased estimates and incorrect standard errors of 
 regression coefficients.
 
-The default covariance pattern for \code{pdInd} produces a G matrix with
+A common use of \code{pdInd} produces a \eqn{G} matrix with
 zero covariances except in the first row and column. If the first random
 effect is the intercept, the resulting model assumes independence between random
 slopes without imposing minimality of variance over the possibly
@@ -57,69 +60,89 @@ arbitrary origin. This imposition is
 the reason that having all covariances equal to zero results in a
 model that fails to be equivariant under location transformations.
 
-The optional \code{cov} parameter can be used to allow selected non-zero
-covariance between random slopes.   
-and biased eIt is often desirable to fit a parsimonious model with more than one
-variable with a random slope.
+The \code{cov} parameter is a square matrix of 0's and 1's used to 
+specify the pattern of zero and
+non-zero components in \eqn{R}, which is the left upper-triangular
+factor of the random effects variance \eqn{G = RR'}.
+
+If the pattern of 0's in the upper triangle of \code{cov} is arranged such that
+every 0's has 0's to its right (i.e. in the same row of the matrix) then
+the pattern will also hold for \eqn{G}.
+
+A common use of \eqn{pdInd} is imposing 0 covariances between random variable
+random coefficients, but non-zero between coefficients for variables and
+the intercept (assuming the intercept is first in the formula).
+This is achieved by specifying \code{cov = covind(n)} where
+\code{n} is the number of random effects, including the intercept. See
+the examples for clarification.
 }
 \examples{
-fit <- lme(MathAch ~ SES + Sex + Minority, data = MathAchieve,
-             random = list(School = ~ 1 + SES + Sex + Minority))
- covind <- function(n, ...) {
-   ret <- diag(n)
-   ret[1,] <- 1
-   a <- list(...)
-   for(i in a){
-     ret[i] <- 1 - ret[i]
-   }
-   ret
-}
-# methods(class = 'pdInd')
-# covind(3)
-# covind(4, 10)             
-# pdi <- pdInd(~1+ SES + Sex, data = MathAchieve, cov = covind(3))   
-# Initialize(list(School = pdi), data = MathAchieve)
-# Initialize(pdi, data = MathAchieve)    
-# z <-  reStruct(list(School = pdi), data = MathAchieve)
-# Initialize(z, data, conLin = list(X= model.matrix(~ SES + Sex, data = MathAchieve), y = MathAchieve$MathAch))
-# coef(pdi)
-# unclass(pdi) 
-# solve(pdi)
-# pdConstruct(pdi)
-# pdMatrix(pdi)
-# class(pdi)
-# summary(fit)
-# getVarCov(fit)
-# cov <- diag(4)
-# cov[rbind(c(1,2),c(1,3), c(1,4))] <- 1
-# cov
-# fit_ind <- update(
-#      fit, 
-#      random = list(School = pdInd(~ 1 + SES + Sex + Minority, cov = cov)))
-# summary(fit_ind)                   # works
-# round(zapsmall(getVarCov(fit_ind)),2)
-# AIC(fit, fit_ind)
-# anova(fit, fit_ind)
+# 
+# Model with full covariance matrix
+#
+fit1 <- lme(MathAch ~ SES + Sex + Minority, data = MathAchieve,
+             random =  ~ 1 + SES + Sex + Minority| School,
+             control = list(msVerbose = TRUE))
+summary(fit1)
+# 
+# Model with zero covariances between all random effects 
+# including the Intercept
+#
+fit2 <- lme(MathAch ~ SES + Sex + Minority, data = MathAchieve,
+             random = list(School = pdDiag( ~ 1 + SES + Sex + Minority)),
+             control = list(msVerbose = TRUE))
+summary(fit2)
+
+# 
+# Model using pdInd and covind(4) 
+# including the Intercept
+#
+fit3 <- lme(MathAch ~ SES + Sex + Minority, data = MathAchieve,
+             random = list(School = pdInd( ~ 1 + SES + Sex + Minority, cov = covind(4))),
+             control = list(msVerbose = TRUE))
+summary(fit3)
+
+# Sequential anovas show that the 'pdInd' fit is a 'significant'
+# improvement over the fully independent fit, but the 
+# the fit with all covariances is 'not a significant' improvement
+# over the 'pdInd' fit.
+
+anova(fit2, fit3, fit1)
+
+# More complex non-zero patterns are possible. 
+# They are easiest to achieve by generating a covariance
+# with 'covind' which can then be altered.
+
+cov4 <- covind(4) 
+cov4[3,4] <- 1   # allows a covariance between beta.Sex and beta.Minority
+
+fit4 <- update(fit3, random = list(School = pdInd( ~ 1 + SES + Sex + Minority, cov = cov4)))
+summary(fit4)
+anova(fit3, fit4)
+
 # 
 # Not all patterns are feasible
 #
-cov <- diag(4)
+cov <- covind(4)
 cov[2,4] <- 1
-cov                                                        # works
+cov      
+# Use tcrossproc(cov) to see patterns of 0s for covariance matrix
+tcrossprod(cov)                                                  # works
 fit_ind2 <- update(
      fit, 
      random = list(School = pdInd(~ 1 + SES + Sex + Minority, cov = cov)),
      control = list(returnObject = TRUE))
 summary(fit_ind2)
 zapsmall(getVarCov(fit_ind2)) 
-zapsmall(getVarCov(fit_ind))
  
-cov <- diag(4)                                             # seems to work
-cov[row(cov) < col(cov)] <- 1
-cov2 <- cov
-fit2 <- lme(MathAch ~ SES + Sex + Minority, data = MathAchieve,
+cov2 <- diag(4)                                             
+cov2[row(cov2) < col(cov2)] <- 1
+cov2 
+tcrossprod(cov2)                                               # works
+fit_full <- lme(MathAch ~ SES + Sex + Minority, data = MathAchieve,
              random = list(School = pdInd( ~ 1 + SES + Sex + Minority, cov = cov2)))
-zapsmall(getVarCov(fit2))
+zapsmall(getVarCov(fit_full))
+AIC(fit, fit_full)
 
 cov3 <- diag(3)                                            # works
 cov3
@@ -127,138 +150,17 @@ fit3 <- lme(MathAch ~ SES + Sex + Minority, data = MathAchieve,
              random = list(School = pdInd( ~ 1 + SES + Sex, cov = cov3)))
 zapsmall(getVarCov(fit3))
 # 
-# Patterns with few zeros
+# A pattern that doesn't work
 #
-cov <- diag(4)                                               # works
-cov[row(cov) < col(cov)] <- 1
-cov
-cov[1,4] <- 1
-cov[2,4] <- 0
-cov[3,4] <- 0
-
-cov
-cov4 <- cov
-fit4 <- lme(MathAch ~ SES + Sex + Minority, data = MathAchieve,
-             random = list(School = pdInd( ~ 1 + SES + Sex + Minority, cov = cov4)),
-             control = list(returnObject = TRUE))
-zapsmall(getVarCov(fit4))
-zapsmall(solve(getVarCov(fit4)))
-
-cov <- diag(4)                                               # makes Ginv have a 0 !!!!!
-cov[row(cov) < col(cov)] <- 1
-cov
-cov[1,4] <- 0
-cov
-cov5 <- cov
-fit5 <- lme(MathAch ~ SES + Sex + Minority, data = MathAchieve,
-             random = list(School = pdInd( ~ 1 + SES + Sex + Minority, cov = cov5)),
-             control = list(returnObject = TRUE))
-zapsmall(getVarCov(fit5))
-zapsmall(solve(getVarCov(fit5)))
-
-
-# puts 0 in Ginv:
-# Not an issue -- consistent with row orthogonality of R
-#   and consistent with column orthogonality of R
-
-cov <- diag(4)
-cov[row(cov) < col(cov)] <- 1
-cov[1,2] <- 0
-cov
-cov6 <- cov
+cov6 <- diag(4)                                              
+cov6[row(cov6) < col(cov6)] <- 1
+cov6[2,3] <-0
+cov6
+tcrossprod(cov6)      # won't work
+                                       
 fit6 <- lme(MathAch ~ SES + Sex + Minority, data = MathAchieve,
              random = list(School = pdInd( ~ 1 + SES + Sex + Minority, cov = cov6)),
              control = list(returnObject = TRUE))
 zapsmall(getVarCov(fit6))
 zapsmall(solve(getVarCov(fit6)))
-
-# puts 0 in G:
-
-cov <- diag(4)
-cov[row(cov) < col(cov)] <- 1
-cov[3,4] <- 0
-cov
-cov5 <- cov
-fit5 <- lme(MathAch ~ SES + Sex + Minority, data = MathAchieve,
-             random = list(School = pdInd( ~ 1 + SES + Sex + Minority, cov = cov5)),
-             control = list(returnObject = TRUE))
-zapsmall(getVarCov(fit5))
-zapsmall(solve(getVarCov(fit5)))
-
-# puts 0 in G and Ginv (block diagonal)
-
-cov <- diag(4)
-cov[row(cov) < col(cov)] <- 1
-cov[3,4] <- 0
-cov[2,4] <- 0
-cov[1,4] <- 0
-
-cov
-cov5 <- cov
-fit5 <- lme(MathAch ~ SES + Sex + Minority, data = MathAchieve,
-             random = list(School = pdInd( ~ 1 + SES + Sex + Minority, cov = cov5)),
-             control = list(returnObject = TRUE))
-zapsmall(getVarCov(fit5))
-zapsmall(solve(getVarCov(fit5)))
-
-# puts 0 in Ginv, NOT G (block diagonal)
-
-cov <- diag(4)
-cov[row(cov) < col(cov)] <- 1
-cov[1,2] <- 0
-cov[1,3] <- 0
-cov[1,4] <- 1
-
-cov
-cov5 <- cov
-fit5 <- lme(MathAch ~ SES + Sex + Minority, data = MathAchieve,
-             random = list(School = pdInd( ~ 1 + SES + Sex + Minority, cov = cov5)),
-             control = list(returnObject = TRUE))
-zapsmall(getVarCov(fit5))
-zapsmall(solve(getVarCov(fit5)))
-
-# Hypothesis:
-# We get the patterns for G by taking inner products of 
-# of ROWS of R and for Ginv by taking inner products of
-# COLUMNS of R.
-
-# Try 8 possibilities for a 3 x 3
-
-fun <- function(cov){
-   G <- getVarCov(lme(MathAch ~ SES + Sex, data = MathAchieve,
-             random = list(School = pdInd( ~ 1 + SES + Sex, cov = cov)),
-             control = list(returnObject = TRUE)))
-   list(cov = cov, tcross = tcrossprod(cov), G = zapsmall(G), Ginv = zapsmall(solve(G)))
-}
-
-cov <- diag(3)
-cov[1,2] <- 1
-fun(cov)
-cov <- diag(3)
-cov[1,3] <- 1
-fun(cov)
-cov <- diag(3)
-cov[2,3] <- 1
-fun(cov)
-cov <- diag(3)
-cov[1,2] <- 1
-cov[1,3] <- 1
-fun(cov)
-cov <- diag(3)   # pattern in invers
-cov[1,2] <- 1
-cov[2,3] <- 1
-cov
-fun(cov)
-cov <- diag(3)    # pattern in inverse
-cov[1,3] <- 1
-cov[2,3] <- 1
-cov
-fun(cov)
-cov <- diag(3)    
-cov[1,3] <- 1
-cov[2,3] <- 1
-cov[1,2] <- 1
-fun(cov)
-             
-
 }

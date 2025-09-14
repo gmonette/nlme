@@ -1,12 +1,154 @@
+dd <- MathAchieve
+
+fit <- lme(MathAch ~ SES + Sex + Minority, dd, random = ~ 1 + SES + Sex | School ,
+           control = list(msVerbose = T))
+summary(fit)
+
+fit2 <- lme(MathAch ~ SES + Sex + Minority, dd, random = list( School = pdInd(~ 1 + SES + Sex, cov = covind(3))),
+            control = list(msVerbose = T))
+summary(fit2)
+AIC(fit, fit2)
+anova(fit, fit2)
+
+pdi <- pdInd(~ 1 + SES + Sex + Minority, cov = covind(4, 13), data = dd)
+class(pdi)
+attr(pdi, 'cov')
+
+fit3 <- lme(MathAch ~ SES + Sex + Minority, dd, 
+            # random = list( School = pdInd(~ 1 + SES + Sex + Minority, cov = covind(4))),
+            random = list(School = pdi),
+            control = list(msVerbose = T))
+summary(fit3)
+AIC(fit, fit2, fit3)
+anova(fit, fit2, fit3)
+
+cov4 <- covind(4)
+cov4[3,4] <- 1
+cov4
+tcrossprod(cov4)
+
+cov4 <- covind(4)
+cov4[1,4] <-0
+cov4[col(cov4)>row(cov4)] <- 1
+cov4
+cov4[3,4] <- 0
+cov4
+dd <- MathAchieve
+
+fit4 <- lme(MathAch ~ SES + Sex + Minority, dd, random = list( School = pdInd(~ 1 + SES + Sex + Minority, cov = cov4)),
+            control = list(msVerbose = T))
+
+pdi <- pdInd(~1 + SES + Sex + Minority, data = dd, cov = cov4, value = diag(4))
+attr(pdi, 'cov')
+summary(fit4)
+AIC(fit, fit2, fit3)
+anova(fit, fit2, fit3)
+
+fit5 <- lme(MathAch ~ SES + Sex + Minority, dd, random = list( School = pdInd(~ 1 + SES + Sex + Minority, cov = covind(4))),
+            control = list(msVerbose = T))
+summary(fit5)
+ 
+cov6 <- covind(4)
+cov6[1,4] <- 0
+
+cov7 <- diag(4)
+cov7[col(cov7) > row(cov7)] <- 1
+cov7
+
+system.time(
+fit6 <- lme(MathAch ~ SES + Sex + Minority, dd, random = list( School = pdInd(~ 1 + SES + Sex + Minority, cov = cov7)),
+            control = list(msVerbose = T))
+)
+summary(fit6)
+
+system.time(
+  fit7 <- lme(MathAch ~ SES + Sex + Minority, dd, random = list( School = pdSymm(~ 1 + SES + Sex + Minority)),
+              control = list(msVerbose = T))
+)
+
+system.time(
+  fit8 <- lme(MathAch ~ SES + Sex + Minority, dd, random = ~ 1 + SES + Sex + Minority| School,
+              control = list(msVerbose = T))
+)
+
+AIC(fit6, fit7,fit8)
+library(car)
+compareCoefs(fit6, fit7, fit8)
+
+
+debug(nlme:::pdConstruct.pdInd)
+
 search()
 library(spida2)
+library(nlme)
 dd <- MathAchieve
 warnings()
 #
-dpi <- pdInd(diag(4) + .2, cov = covind(4))
+covindL <- function(n, ...) {
+  ret <- covind(n,...)
+  diag(ret) <- 0
+  ret > 0
+}
+{
+  V <- diag(4)
+  V[1,] <- V[1,] + .1
+  V[,1] <- V[,1] + .1
+  V
+}
+dpi <- pdInd(V, cov = covind(4, 13))
 dpi
-coef(dpi)
 
+V <- diag(4)
+V[c(2,3)] <- 1
+V <- V + t(V)
+V
+
+dpm <- pdMat(V)
+dpm %>% unclass
+coef(dpm)
+copdFactor(dpm) %>% matrix(4,4) %>% crossprod %>% zapsmall
+pdFactor(dpm) %>% matrix(4,4) 
+coef(dpm) %>% matrix(4,4)
+
+debug(nlme:::pdConstruct.pdInd)
+
+debug(nlme:::pdFactor.pdInd)
+dpi <- pdInd(V, cov = covind(4))
+class(dpi)
+unclass(dpi)
+class(dpi) <- c('pdInd','pdMat')
+%>% matrix(4,4) %>% crossprod %>% zapsmall
+pdFactor(dpi)
+coef(dpi)
+pdMatrix(dpi,factor=TRUE)
+
+
+zz <- dpi %>% unclass
+Rmat <- diag(4)
+diag(Rmat) <- exp(zz[1:4])
+debug(nlme:::pdConstruct.pdInd)
+Rmat^2
+ddi <- pdDiag(diag(4) + .2)
+Rmat[covindL(4)] <- zz[5:7]
+crossprod(t(Rmat))
+
+pdFactor(ddi)
+pdMatrix(ddi)
+coef(ddi) %>% exp %>% {.^2}
+
+
+dpi
+chol(dpi)
+attr(dpi, 'cov')
+zc <- coef(dpi)
+A <- diag(4)
+
+diag(A) <- exp(zc[1:4])
+A[attr(dpi,'cov')] <- zc[5:7]
+A
+xx <- pdFactor(dpi) %>% matrix(4,4)
+crossprod(A)
+A[co]
 #
 #
 fit <- lme(MathAch ~ SES + Sex, dd, random = ~ 1 + SES + Sex |School)

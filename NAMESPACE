@@ -50,7 +50,7 @@ export(ACF, allCoef, asOneFormula, asTable, augPred, balancedGrouped,
        varConstProp,
        varFixed, varFunc, varIdent, Variogram, varPower,
        varWeights,
-     f2L, f2R, pdInd, covind                                               # added by GM
+     f2L, f2R, pdInd, covind, covindL                                              # added by GM
      )
 
 # called directly via do.call

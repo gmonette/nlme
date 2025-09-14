@@ -28,22 +28,15 @@ covind <- function(n, ...) {
   }
   ret
 }
-#' @export
-covindL <- function(n, ...) {
-  ret <- covind(n,...)
-  diag(ret) <- 0
-  ret > 0
-}
 #' Construct pdInd object
 #' 
 #' This function is a constructor for the \code{pdInd} class used to
 #' represent a positive-definite random effects variance matrix 
-#' with a specified pattern of zero covariances.
+#' with some specified patterns of zero covariances.
 #' 
 #' Mixed models in which many predictors have random slopes often fail to converge 
-#' because of the large number of parameters in the random effects covariance matrix, \eqn{G}.
-#' 
-#' One way of fitting a more parsimonious model that
+#' in part because of the large number of parameters in the full covariance (G)
+#' matrix for random effects. One way of fitting a more parsimonious model that
 #' includes random slopes is to use \code{\link[nlme]{pdDiag}} with zeros off the
 #' diagonal. However, this also forces zero covariances between random slopes and
 #' and the random intercept, resulting in a model that is not equivariant
@@ -52,7 +45,7 @@ covindL <- function(n, ...) {
 #' predictors can lead to biased estimates and incorrect standard errors of 
 #' regression coefficients.
 #'
-#' A common use of \code{pdInd} produces a \eqn{G} matrix with
+#' The default covariance pattern for \code{pdInd} produces a G matrix with
 #' zero covariances except in the first row and column. If the first random
 #' effect is the intercept, the resulting model assumes independence between random
 #' slopes without imposing minimality of variance over the possibly
@@ -60,21 +53,10 @@ covindL <- function(n, ...) {
 #' the reason that having all covariances equal to zero results in a
 #' model that fails to be equivariant under location transformations.
 #' 
-#' The \code{cov} parameter is a square matrix of 0's and 1's used to 
-#' specify the pattern of zero and
-#' non-zero components in \eqn{R}, which is the left upper-triangular
-#' factor of the random effects variance \eqn{G = RR'}.
-#' 
-#' If the pattern of 0's in the upper triangle of \code{cov} is arranged such that
-#' every 0's has 0's to its right (i.e. in the same row of the matrix) then
-#' the pattern will also hold for \eqn{G}.
-#' 
-#' A common use of \eqn{pdInd} is imposing 0 covariances between random variable
-#' random coefficients, but non-zero between coefficients for variables and
-#' the intercept (assuming the intercept is first in the formula).
-#' This is achieved by specifying \code{cov = covind(n)} where
-#' \code{n} is the number of random effects, including the intercept. See
-#' the examples for clarification.  
+#' The optional \code{cov} parameter can be used to allow selected non-zero
+#' covariance between random slopes.   
+#' and biased eIt is often desirable to fit a parsimonious model with more than one
+#' variable with a random slope.
 #' 
 #' @param object an object inheriting from the class \code{pdInd}, representing
 #' a positive definite matrix with zero covariances except in the first row and
@@ -86,78 +68,67 @@ covindL <- function(n, ...) {
 #' row/column names for the matrix represented by \code{object}.
 #' @param data and optional data frame i which to evaluate the variables names
 #' in \code{value} and \code{form}. ...
-#' @param cov matrix of 0's and 1's showing pattern of zero and non-zero
-#' elements in \eqn{R} where \eqn{R} is the left upper-triangular factor of the
-#' random effects variance matrix \eqn{G = RR'}. To make sure that the
-#' pattern will also apply to \eqn{G}, check the pattern of 0's in
-#' \code{tcrossprod(cov)}.
+#' @param cov optional position in lower triangle of covariances that are
+#' estimated and, thus, possibly non-zero. The default is that the covariances
+#' in the first column are estimated and possibly non-zero.
 #' @examples
-#' # 
-#' # Model with full covariance matrix
-#' #
-#' fit1 <- lme(MathAch ~ SES + Sex + Minority, data = MathAchieve,
-#'              random =  ~ 1 + SES + Sex + Minority| School,
-#'              control = list(msVerbose = TRUE))
-#' summary(fit1)
-#' # 
-#' # Model with zero covariances between all random effects 
-#' # including the Intercept
-#' #
-#' fit2 <- lme(MathAch ~ SES + Sex + Minority, data = MathAchieve,
-#'              random = list(School = pdDiag( ~ 1 + SES + Sex + Minority)),
-#'              control = list(msVerbose = TRUE))
-#' summary(fit2)
-#' 
-#' # 
-#' # Model using pdInd and covind(4) 
-#' # including the Intercept
-#' #
-#' fit3 <- lme(MathAch ~ SES + Sex + Minority, data = MathAchieve,
-#'              random = list(School = pdInd( ~ 1 + SES + Sex + Minority, cov = covind(4))),
-#'              control = list(msVerbose = TRUE))
-#' summary(fit3)
-#' 
-#' # Sequential anovas show that the 'pdInd' fit is a 'significant'
-#' # improvement over the fully independent fit, but the 
-#' # the fit with all covariances is 'not a significant' improvement
-#' # over the 'pdInd' fit.
-#' 
-#' anova(fit2, fit3, fit1)
-#' 
-#' # More complex non-zero patterns are possible. 
-#' # They are easiest to achieve by generating a covariance
-#' # with 'covind' which can then be altered.
-#' 
-#' cov4 <- covind(4) 
-#' cov4[3,4] <- 1   # allows a covariance between beta.Sex and beta.Minority
-#' 
-#' fit4 <- update(fit3, random = list(School = pdInd( ~ 1 + SES + Sex + Minority, cov = cov4)))
-#' summary(fit4)
-#' anova(fit3, fit4)
-#' 
+#' fit <- lme(MathAch ~ SES + Sex + Minority, data = MathAchieve,
+#'              random = list(School = ~ 1 + SES + Sex + Minority))
+#'  covind <- function(n, ...) {
+#'    ret <- diag(n)
+#'    ret[1,] <- 1
+#'    a <- list(...)
+#'    for(i in a){
+#'      ret[i] <- 1 - ret[i]
+#'    }
+#'    ret
+#' }
+#' # methods(class = 'pdInd')
+#' # covind(3)
+#' # covind(4, 10)             
+#' # pdi <- pdInd(~1+ SES + Sex, data = MathAchieve, cov = covind(3))   
+#' # Initialize(list(School = pdi), data = MathAchieve)
+#' # Initialize(pdi, data = MathAchieve)    
+#' # z <-  reStruct(list(School = pdi), data = MathAchieve)
+#' # Initialize(z, data, conLin = list(X= model.matrix(~ SES + Sex, data = MathAchieve), y = MathAchieve$MathAch))
+#' # coef(pdi)
+#' # unclass(pdi) 
+#' # solve(pdi)
+#' # pdConstruct(pdi)
+#' # pdMatrix(pdi)
+#' # class(pdi)
+#' # summary(fit)
+#' # getVarCov(fit)
+#' # cov <- diag(4)
+#' # cov[rbind(c(1,2),c(1,3), c(1,4))] <- 1
+#' # cov
+#' # fit_ind <- update(
+#' #      fit, 
+#' #      random = list(School = pdInd(~ 1 + SES + Sex + Minority, cov = cov)))
+#' # summary(fit_ind)                   # works
+#' # round(zapsmall(getVarCov(fit_ind)),2)
+#' # AIC(fit, fit_ind)
+#' # anova(fit, fit_ind)
 #' # 
 #' # Not all patterns are feasible
 #' #
-#' cov <- covind(4)
+#' cov <- diag(4)
 #' cov[2,4] <- 1
-#' cov      
-#' # Use tcrossproc(cov) to see patterns of 0s for covariance matrix
-#' tcrossprod(cov)                                                  # works
+#' cov                                                        # works
 #' fit_ind2 <- update(
 #'      fit, 
 #'      random = list(School = pdInd(~ 1 + SES + Sex + Minority, cov = cov)),
 #'      control = list(returnObject = TRUE))
 #' summary(fit_ind2)
 #' zapsmall(getVarCov(fit_ind2)) 
+#' zapsmall(getVarCov(fit_ind))
 #'  
-#' cov2 <- diag(4)                                             
-#' cov2[row(cov2) < col(cov2)] <- 1
-#' cov2 
-#' tcrossprod(cov2)                                               # works
-#' fit_full <- lme(MathAch ~ SES + Sex + Minority, data = MathAchieve,
+#' cov <- diag(4)                                             # seems to work
+#' cov[row(cov) < col(cov)] <- 1
+#' cov2 <- cov
+#' fit2 <- lme(MathAch ~ SES + Sex + Minority, data = MathAchieve,
 #'              random = list(School = pdInd( ~ 1 + SES + Sex + Minority, cov = cov2)))
-#' zapsmall(getVarCov(fit_full))
-#' AIC(fit, fit_full)
+#' zapsmall(getVarCov(fit2))
 #' 
 #' cov3 <- diag(3)                                            # works
 #' cov3
@@ -165,19 +136,144 @@ covindL <- function(n, ...) {
 #'              random = list(School = pdInd( ~ 1 + SES + Sex, cov = cov3)))
 #' zapsmall(getVarCov(fit3))
 #' # 
-#' # A pattern that doesn't work
+#' # Patterns with few zeros
 #' #
-#' cov6 <- diag(4)                                              
-#' cov6[row(cov6) < col(cov6)] <- 1
-#' cov6[2,3] <-0
-#' cov6
-#' tcrossprod(cov6)      # won't work
-#'                                        
+#' cov <- diag(4)                                               # works
+#' cov[row(cov) < col(cov)] <- 1
+#' cov
+#' cov[1,4] <- 1
+#' cov[2,4] <- 0
+#' cov[3,4] <- 0
+#' 
+#' cov
+#' cov4 <- cov
+#' fit4 <- lme(MathAch ~ SES + Sex + Minority, data = MathAchieve,
+#'              random = list(School = pdInd( ~ 1 + SES + Sex + Minority, cov = cov4)),
+#'              control = list(returnObject = TRUE))
+#' zapsmall(getVarCov(fit4))
+#' zapsmall(solve(getVarCov(fit4)))
+#' 
+#' cov <- diag(4)                                               # makes Ginv have a 0 !!!!!
+#' cov[row(cov) < col(cov)] <- 1
+#' cov
+#' cov[1,4] <- 0
+#' cov
+#' cov5 <- cov
+#' fit5 <- lme(MathAch ~ SES + Sex + Minority, data = MathAchieve,
+#'              random = list(School = pdInd( ~ 1 + SES + Sex + Minority, cov = cov5)),
+#'              control = list(returnObject = TRUE))
+#' zapsmall(getVarCov(fit5))
+#' zapsmall(solve(getVarCov(fit5)))
+
+#' 
+#' 
+#' # puts 0 in Ginv:
+#' # Not an issue -- consistent with row orthogonality of R
+#' #   and consistent with column orthogonality of R
+#' 
+#' cov <- diag(4)
+#' cov[row(cov) < col(cov)] <- 1
+#' cov[1,2] <- 0
+#' cov
+#' cov6 <- cov
 #' fit6 <- lme(MathAch ~ SES + Sex + Minority, data = MathAchieve,
 #'              random = list(School = pdInd( ~ 1 + SES + Sex + Minority, cov = cov6)),
 #'              control = list(returnObject = TRUE))
 #' zapsmall(getVarCov(fit6))
 #' zapsmall(solve(getVarCov(fit6)))
+#' 
+#' # puts 0 in G:
+#' 
+#' cov <- diag(4)
+#' cov[row(cov) < col(cov)] <- 1
+#' cov[3,4] <- 0
+#' cov
+#' cov5 <- cov
+#' fit5 <- lme(MathAch ~ SES + Sex + Minority, data = MathAchieve,
+#'              random = list(School = pdInd( ~ 1 + SES + Sex + Minority, cov = cov5)),
+#'              control = list(returnObject = TRUE))
+#' zapsmall(getVarCov(fit5))
+#' zapsmall(solve(getVarCov(fit5)))
+#' 
+#' # puts 0 in G and Ginv (block diagonal)
+#' 
+#' cov <- diag(4)
+#' cov[row(cov) < col(cov)] <- 1
+#' cov[3,4] <- 0
+#' cov[2,4] <- 0
+#' cov[1,4] <- 0
+#' 
+#' cov
+#' cov5 <- cov
+#' fit5 <- lme(MathAch ~ SES + Sex + Minority, data = MathAchieve,
+#'              random = list(School = pdInd( ~ 1 + SES + Sex + Minority, cov = cov5)),
+#'              control = list(returnObject = TRUE))
+#' zapsmall(getVarCov(fit5))
+#' zapsmall(solve(getVarCov(fit5)))
+#'
+#' # puts 0 in Ginv, NOT G (block diagonal)
+#' 
+#' cov <- diag(4)
+#' cov[row(cov) < col(cov)] <- 1
+#' cov[1,2] <- 0
+#' cov[1,3] <- 0
+#' cov[1,4] <- 1
+#' 
+#' cov
+#' cov5 <- cov
+#' fit5 <- lme(MathAch ~ SES + Sex + Minority, data = MathAchieve,
+#'              random = list(School = pdInd( ~ 1 + SES + Sex + Minority, cov = cov5)),
+#'              control = list(returnObject = TRUE))
+#' zapsmall(getVarCov(fit5))
+#' zapsmall(solve(getVarCov(fit5)))
+#' 
+#' # Hypothesis:
+#' # We get the patterns for G by taking inner products of 
+#' # of ROWS of R and for Ginv by taking inner products of
+#' # COLUMNS of R.
+#' 
+#' # Try 8 possibilities for a 3 x 3
+#' 
+#' fun <- function(cov){
+#'    G <- getVarCov(lme(MathAch ~ SES + Sex, data = MathAchieve,
+#'              random = list(School = pdInd( ~ 1 + SES + Sex, cov = cov)),
+#'              control = list(returnObject = TRUE)))
+#'    list(cov = cov, tcross = tcrossprod(cov), G = zapsmall(G), Ginv = zapsmall(solve(G)))
+#' }
+#' 
+#' cov <- diag(3)
+#' cov[1,2] <- 1
+#' fun(cov)
+#' cov <- diag(3)
+#' cov[1,3] <- 1
+#' fun(cov)
+#' cov <- diag(3)
+#' cov[2,3] <- 1
+#' fun(cov)
+#' cov <- diag(3)
+#' cov[1,2] <- 1
+#' cov[1,3] <- 1
+#' fun(cov)
+#' cov <- diag(3)   # pattern in invers
+#' cov[1,2] <- 1
+#' cov[2,3] <- 1
+#' cov
+#' fun(cov)
+#' cov <- diag(3)    # pattern in inverse
+#' cov[1,3] <- 1
+#' cov[2,3] <- 1
+#' cov
+#' fun(cov)
+#' cov <- diag(3)    
+#' cov[1,3] <- 1
+#' cov[2,3] <- 1
+#' cov[1,2] <- 1
+#' fun(cov)
+#'              
+
+
+#' 
+
 #' @export
 pdInd <-
   function (value = numeric(0), form = NULL, nam = NULL,
@@ -185,15 +281,12 @@ pdInd <-
   {
     disp('In pdInd')
     disp(cov)
-    if(is.null(cov)) stop("cov must be a matrix indicating which terms should be non-zero in R in the Choleski G=RR' decomposition. See ?pdInd.")
-    cov <- cov + t(cov)
-    cov <- cov != 0
-    cov[row(cov)>=col(cov)] <- FALSE
+    if(is.null(cov)) stop("cov must be a matrix indicating which terms should be non-zero in R in the Choleski G=RR' decomposition")
+    if(is.numeric(cov)) cov <- cov != 0
+    diag(cov) <- FALSE
     object <- numeric(0)
     class(object) <- c("pdInd", "pdMat")
-    attr(object,'cov') <- cov
-    attr(value, 'cov') <- cov
-    pdConstruct(object, value, form, nam, data, cov = cov)
+    pdConstruct(object, value, form, nam, data, cov)
   }
 #' Construct pdInd object
 #' 
@@ -222,80 +315,6 @@ pdConstruct.pdInd <-
             cov = NULL, 
             ...)
   {
-    # note that pdConstruct.pdMat return an upper-triangular R factor, === might not be correct XXXX
-    # 1. Given value, computes lower triangular L such that value = L'L
-    # 2. returns 
-    #               c(log(diag(L)), c(L[t(cov)]))
-    val <- NextMethod()                                           # to get structure
-    disp('In pdConstruct.pdInd')
-    disp(object)
-    disp(value)
-    disp(cov)
-    if(!is.null(attr(object,'cov'))) cov <- attr(object,'cov')
-    if(!is.null(attr(value,'cov'))) cov <- attr(value,'cov')
-    if(!is.null(attr(form,'cov'))) cov <- attr(form,'cov')
-    # val <- pdConstruct.pdMat(object,
-    #                                 value = value,
-    #                                 form = form,
-    #                                 nam = nam,
-    #                                 data = data)
-    # attr(val,'cov') <- cov 
-    disp(val)
-    if (length(val) == 0) {
-      class(val) <- c("pdInd", "pdMat")
-      return(val)
-    }
-    # mod 2015 07 04: added arbitrary cov structure of non zero
-    # covariance
-    # isRmat <- function(x) all( x[row(x) > col(x)] == 0) # is lower triangle == 0?    
-    
-    if (is.matrix(value)) {
-      # if(is.null(cov)) {
-      #   if(!is.null(attr(value,'cov'))) cov <- attr(value,'cov')
-      #   else cov <- covindL(nrow(value))
-      # }
-      # 
-      #    disp(cov)
-      # if(isRmat(val)){
-      #   value <- c(log(diag(val)), val[cov])
-      #   disp(value)
-      #   # keeping only the entries that should be non-zero
-      # } else stop("matrix should be an upper triangular matrix")
-      
-      # Compute a lower triangular right factor
-      if(getOption('verbose')) browser()
-      attr(value,"cov") <- cov
-      attr(value,"invert") <- FALSE
-      N <- nrow(value)
-      perm <- N:1
-      if(getOption('verbose'))browser()
-      L <- chol(value[perm,perm])[perm,perm]                 # lower-triangular factorization
-      ret <- c(log(diag(as.matrix(L))),L[t(cov)] )
-      # ret <- c(log(ret[1:N]),ret[-(1:N)])
-      attributes(ret) <-
-        attributes(val)[names(attributes(val)) != "dim"]
-      attr(ret,'cov') <- cov
-      attr(ret,'invert') <- FALSE
-      class(ret) <- c("pdInd", "pdMat")
-      return(ret)
-    }
-    stop("shouldn't get here in pdConstruct.pdInd")
-    Ncol <- (length(val) + 1)/2
-    if (length(val) != 2*round(Ncol) - 1) {
-      stop(gettextf("an object of length %d does not match a pdInd factor (diagonal + covariances with intercept",
-                    length(val)), domain = NA)
-    }
-    class(val) <- c("pdInd", "pdMat")
-    val
-  }
-
-
-OLD_pdConstruct.pdInd <-
-  function (object, value = numeric(0), form = formula(object),
-            nam = Names(object), data = sys.parent(),
-            cov = NULL, 
-            ...)
-  {
     # note that pdConstruct.pdMat return an upper-triangular R factor, === might not be correct
     disp('In pdConstruct.pdInd')
     disp(object)
@@ -303,14 +322,12 @@ OLD_pdConstruct.pdInd <-
     disp(cov)
     if(!is.null(attr(object,'cov'))) cov <- attr(object,'cov')
     if(!is.null(attr(value,'cov'))) cov <- attr(value,'cov')
-    # val <- pdConstruct.pdMat(object,
-    #                                 value = value,
-    #                                 form = form,
-    #                                 nam = nam,
-    #                                 data = data)
-    # attr(val,'cov') <- cov 
-    val <- NextMethod()
-    disp(val)
+    val <- pdConstruct.pdMat(object,
+                                    value = value,
+                                    form = form,
+                                    nam = nam,
+                                    data = data)
+    attr(val,'cov') <- cov 
     if (length(val) == 0) {
       class(val) <- c("pdInd", "pdMat")
       return(val)
@@ -326,7 +343,6 @@ OLD_pdConstruct.pdInd <-
       #    disp(cov)
       if(isRmat(val)){
         value <- c(log(diag(val)), val[cov])
-        disp(value)
         # keeping only the entries that should be non-zero
       } else stop("matrix should be an upper triangular matrix")
       attributes(value) <-
@@ -347,7 +363,6 @@ OLD_pdConstruct.pdInd <-
     class(val) <- c("pdInd", "pdMat")
     val
   }
-
 
 
 #' Factor of a pdInd object.
@@ -384,18 +399,19 @@ pdFactor.pdInd <-
     invert <- attr(object,"invert")
     cov <- attr(object,"cov")
     object <- as.vector(object)
-    # Ncov <- sum(cov)
-    # Ncol <- length(object) - Ncov
-    # 
-    Ncol <- ncol(cov)
-    # 
-    # We want to return a right factor but pdInd parametrizes
-    # 
-    L <- diag(Ncol)
-    diag(L) <- exp(object[1:Ncol])
-    if(length(object) > Ncol) L[t(cov)] <- object[-(1:Ncol)]
-    
-    if(invert) c(solve(L)) else c(L)
+    Ncov <- sum(cov)
+    Ncol <- length(object) - Ncov
+    # was:
+    #   L <- matrix(0,Ncol,Ncol)
+    #   diag(L) <- exp( object[1:Ncol])
+    #   if ( Ncol > 1 ) L[row(L)>1 & col(L)==1] <-
+    #     object[(Ncol+1):length(object)]
+    #   if(invert) c(t(solve(L))) else c(L2R(L))
+    R <- matrix(0,Ncol,Ncol)
+    diag(R) <- exp( object[1:Ncol])
+    if ( Ncol > 1 ) R[cov] <-
+      object[(Ncol+1):length(object)]
+    if(invert) c(t(solve(f2L(R)))) else c(R)
   }
 #' pdMatrix method for pdInd objects
 #' 
